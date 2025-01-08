@@ -14,9 +14,6 @@ class StaticData:
     def PI(self):
         return 3.14159
 
-    @property
-    def GRAVITY(self):
-        return 9.8
 
 if __name__=="__main__":
     staticdata=StaticData()
