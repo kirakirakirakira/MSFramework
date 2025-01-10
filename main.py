@@ -34,7 +34,7 @@ source_ip_count = Counter()
 
 
 #update counter return ip-frequency pairs
-for path in file_path:
+for path in file_path[:1]:
 # 逐行读取文件并统计源 IP 地址
     with open(path, "r", encoding="utf-8") as file:
         for line in file:

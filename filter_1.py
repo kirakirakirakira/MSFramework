@@ -14,9 +14,11 @@ class Filter1:
         self.fplist=["" for _ in range(rows)]
         self.simi_list=[0 for _ in range(rows)]
         self.scan_times=1
+        self.threshold=0.8 #to be modified
 
         #abnormal flow
         self.abnormal_data_for_filter1=StaticData(self.cols).data_for_filter1
+        self.abnormal_flow_ids=StaticData(self.cols).fplist
     def update(self,item:list[str]):
         index = mmh3.hash(item[1], seed=self.cols) % self.cols
         if item[0] in self.fplist:
@@ -45,6 +47,7 @@ class Filter1:
 
 
     def scan(self,times=10):
+        flow_to_next_filter=[]
         if self.scan_times==0:
             for i in range(self.rows):
                 maxsim=0
@@ -57,8 +60,15 @@ class Filter1:
                     if simi>maxsim:
                         maxsim=simi
                 self.simi_list[i]=maxsim
+                #mark and clear potential abnormal flow id
+                if maxsim>self.threshold:
+                    flow_to_next_filter.append(self.fplist[i])
+                    self.data[i]=[0 for _ in range(self.cols)]
+                    self.fplist[i]=""
+                    self.simi_list[i]=0
+
         self.scan_times=(self.scan_times+1)%times
-        return
+        return flow_to_next_filter
 
     def display(self):
         """
@@ -75,7 +85,7 @@ class Filter1:
 if __name__=="__main__":
     filter1=Filter1(30,50)
     file_path = ["../data1/02.txt", "../data1/00.txt", "../data1/01.txt", "../data1/03.txt", "../data1/04.txt"]
-
+    abnormal_list=[]
     # 用于存储源 IP 地址的计数器
     source_ip_count = Counter()
     start_time=time.time()
@@ -90,7 +100,7 @@ if __name__=="__main__":
                     source_ip = parts[0]  # 第一个部分是源 IP 地址
                     destination_ip=parts[1]
                     filter1.update([source_ip,destination_ip])
-                    filter1.scan(10000)
+                    abnormal_list+=filter1.scan(10000)
                     if filter1.scan_times==0:
                         end_time = time.time()
                         print("扫描累计用时%.2f秒" % (end_time - start_time))
@@ -109,5 +119,16 @@ if __name__=="__main__":
     #         print(filter1.data[28])
     #         print(simi)
     #         break
+    abnormal_list=list(set(abnormal_list))
+    true_abnormal=filter1.abnormal_flow_ids
+    tp = len(set(abnormal_list) & set(true_abnormal))
+    fp = len(set(abnormal_list) - set(true_abnormal))
+    fn = len(set(true_abnormal) - set(abnormal_list))
 
+    # 计算准确率和召回率
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+
+    print(f"准确率 (Precision): {precision:.2f}")
+    print(f"召回率 (Recall): {recall:.2f}")
     filter1.display()

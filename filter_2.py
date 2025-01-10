@@ -1,5 +1,116 @@
-class Filter2:
-    def __init__(self):
+import math
+import time
+from CMSketch import CountMinSketch
+from simiSketch import jaccard_est_of_simiSketch_CM
+class Bucket:
+    def __init__(self, fp=None,width=10,height=10):
+        self.fp = fp
+        self.feature_vector = CountMinSketch(width,height)
+        self.similarity_score=0
+        self.S = 0  # 综合指标 S
 
-        pass
+    def update_S(self, alpha,t_entry,t_window):
+        T_now=time.time()
+        age = T_now - t_entry
+        normalized_age = math.exp(-age / t_window)
+        self.S = alpha * self.similarity_score + (1 - alpha) * (1 - normalized_age)
 
+class BucketArray:
+    def __init__(self, sizeA,sizeB):
+        #main buckets array and alter buckets array
+        self.buckets_array=[[None] * sizeA,[None] * sizeB]
+        self.alpha=0.5 #to be defined
+        self.t_window=1000 #time window for measurement
+        self.t_entry = time.time()
+
+    def is_full(self):
+        return all(bucket is not None for bucket in self.buckets)
+
+    def find_insert_index(self,fp):
+        ct0,ct1=0,0
+        empty_index0=None
+        empty_index1=None
+        for i, bucket in enumerate(self.buckets_array[0]):
+            if bucket is not None:
+                if bucket.fp is fp:
+                    return [0,i]
+            else:
+                if ct0==0:
+                    empty_index0=i
+                    ct0=1
+        for i, bucket in enumerate(self.buckets_array[1]):
+            if bucket is not None:
+                if bucket.fp is fp:
+                    return [1,i]
+            else:
+                if ct1==0:
+                    empty_index1=i
+                    ct1=1
+
+        if empty_index0 is not None:
+            return [0,empty_index0]
+        if empty_index1 is not None:
+            return [1,empty_index1]
+        return None
+
+    def insert(self, packet:list[str]):
+        index = self.find_insert_index(packet[0])
+        if self.buckets_array[index[0]][index[1]] is None:
+            self.buckets_array[index[0]][index[1]] = Bucket(packet[0], 10,10)
+            self.buckets_array[index[0]][index[1]].feature_vector.add(packet[1])
+            self.buckets_array[index[0]][index[1]].update_S(self.alpha, time.time(), t_window=1000)
+        else:
+            self.buckets_array[index[0]][index[1]].feature_vector.add(packet[1])
+
+    def replace_least_S(self, fp, feature_vector, similarity_score, alpha, T_now, T_window):
+        min_S_index = min(
+            range(len(self.buckets)),
+            key=lambda i: self.buckets[i].S if self.buckets[i] is not None else float('inf')
+        )
+        self.buckets[min_S_index] = Bucket(fp, feature_vector, similarity_score, T_now)
+        self.buckets[min_S_index].update_S(alpha, T_now, T_window)
+
+    def scan_and_swap(self, other_array, alpha, T_now, T_window):
+        self.buckets = [
+            bucket for bucket in self.buckets if bucket is not None  # 清理None值
+        ]
+        other_array.buckets = [
+            bucket for bucket in other_array.buckets if bucket is not None
+        ]
+
+        if self.buckets and other_array.buckets:
+            min_bucket = min(self.buckets, key=lambda b: b.S)
+            max_bucket = max(other_array.buckets, key=lambda b: b.S)
+
+            # 交换
+            min_index = self.buckets.index(min_bucket)
+            max_index = other_array.buckets.index(max_bucket)
+
+            self.buckets[min_index], other_array.buckets[max_index] = (
+                other_array.buckets[max_index], self.buckets[min_index]
+            )
+
+class TrafficMonitor:
+    def __init__(self, main_size, alternative_size, alpha, T_window):
+        self.main_buckets = BucketArray(main_size)
+        self.alternative_buckets = BucketArray(alternative_size)
+        self.alpha = alpha
+        self.T_window = T_window
+
+    def process_packet(self, fp, feature_vector, similarity_score):
+        T_now = time.time()
+
+        if not self.main_buckets.is_full():
+            self.main_buckets.insert(fp, feature_vector, similarity_score, self.alpha, T_now, self.T_window)
+        elif not self.alternative_buckets.is_full():
+            self.alternative_buckets.insert(fp, feature_vector, similarity_score, self.alpha, T_now, self.T_window)
+        else:
+            self.alternative_buckets.replace_least_S(fp, feature_vector, similarity_score, self.alpha, T_now, self.T_window)
+
+    def periodic_scan(self):
+        T_now = time.time()
+        self.main_buckets.scan_and_swap(self.alternative_buckets, self.alpha, T_now, self.T_window)
+
+if __name__=="__main__":
+    bucketArray=BucketArray(10,3)
+    bucketArray.insert(["aaa","bbb"])
