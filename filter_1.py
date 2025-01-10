@@ -6,13 +6,6 @@ import mmh3
 
 from static_data import StaticData
 
-staticdata = StaticData(50)
-
-abnormal_data_for_filter1=staticdata.data_for_filter1
-
-
-
-
 class Filter1:
     def __init__(self,rows:int,cols:int):
         self.rows = rows
@@ -20,7 +13,7 @@ class Filter1:
         self.data = [[0 for _ in range(cols)] for _ in range(rows)]
         self.fplist=["" for _ in range(rows)]
         self.simi_list=[0 for _ in range(rows)]
-        self.scan_times=0
+        self.scan_times=1
 
         #abnormal flow
         self.abnormal_data_for_filter1=StaticData(self.cols).data_for_filter1
@@ -42,7 +35,7 @@ class Filter1:
                 min_simi=self.simi_list[i]
                 index_of_minsimi=i
 
-        if min_simi<=0:
+        if sum(self.data[index_of_minsimi])<0 or min_simi<0:
             self.fplist[index_of_minsimi]=item[0]
             self.data[index_of_minsimi]=[0 for i in range(self.cols)]
             self.data[index_of_minsimi][index] += 1
@@ -97,8 +90,24 @@ if __name__=="__main__":
                     source_ip = parts[0]  # 第一个部分是源 IP 地址
                     destination_ip=parts[1]
                     filter1.update([source_ip,destination_ip])
-                    filter1.scan(100000)
+                    filter1.scan(10000)
+                    if filter1.scan_times==0:
+                        end_time = time.time()
+                        print("扫描累计用时%.2f秒" % (end_time - start_time))
                     #print(filter1.scan_times)
     end_time = time.time()
     print("用时%.2f秒"%(end_time-start_time))
+
+    # for j in filter1.abnormal_data_for_filter1:
+    #
+    #     dot_product = sum(a * b for a, b in zip(filter1.data[28], j))
+    #     norm1 = math.sqrt(sum(a ** 2 for a in filter1.data[28]))
+    #     norm2 = math.sqrt(sum(b ** 2 for b in j))
+    #     simi = dot_product / (norm1 * norm2) if norm2 * norm1 != 0 else 0
+    #     if simi>0:
+    #         print(j)
+    #         print(filter1.data[28])
+    #         print(simi)
+    #         break
+
     filter1.display()
