@@ -1,5 +1,7 @@
 from CMSketch import CountMinSketch
 
+#methods for calculating similarity
+
 def jaccard_est_of_simiSketch_CM(cms1,cms2):
     if cms1.depth!=cms2.depth:
         print("can't estimate")
