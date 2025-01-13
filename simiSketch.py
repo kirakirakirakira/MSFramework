@@ -3,12 +3,15 @@ from CMSketch import CountMinSketch
 #methods for calculating similarity
 
 def jaccard_est_of_simiSketch_CM(cms1,cms2):
+    if not cms1 or not cms2:
+        return 0
+
     if cms1.depth!=cms2.depth:
         print("can't estimate")
-        return
+        return 0
     if cms1.width!=cms2.width:
         print("can't estimate")
-        return
+        return 0
     depth=cms1.depth
     width=cms1.width
     jaccard_est = 1
