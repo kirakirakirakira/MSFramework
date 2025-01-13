@@ -19,12 +19,13 @@ class BucketArray:
     def __init__(self, sizeA,sizeB):
         #main buckets array and alter buckets array
         self.buckets_array=[[None] * sizeA,[None] * sizeB]
-        self.alpha=0.5 #to be defined
+        self.alpha=0.8 #to be defined
         self.t_window=1000 #time window for measurement
         self.t_entry = time.time() #start time static
+        self.scan_times=1
 
     def is_full(self):
-        return all(bucket is not None for bucket in self.buckets)
+        return all(bucket is not None for bucket in self.buckets_array[0]) and all(bucket is not None for bucket in self.buckets_array[1])
 
     def find_insert_index(self,fp):
         ct0,ct1=0,0
@@ -65,6 +66,7 @@ class BucketArray:
 
         else:
             self.buckets_array[index[0]][index[1]].feature_vector.add(packet[1])
+            self.buckets_array[index[0]][index[1]].update_S(self.alpha, self.t_entry, self.t_window)
         return
 
     def replace_least_S(self, fp):
@@ -104,7 +106,16 @@ class BucketArray:
                 print("None")
             else:
                 print("flow id:%s, similarity score:%.2f, S:%.2f"%(item.fp,item.similarity_score,item.S))
-                item.feature_vector.display()
+                #item.feature_vector.display()
+
+        print("alter buckets:")
+        for i, item in enumerate(self.buckets_array[1]):
+            print("No.%d: " % i, end=" ")
+            if item is None:
+                print("None")
+            else:
+                print("flow id:%s, similarity score:%.2f, S:%.2f" % (item.fp, item.similarity_score, item.S))
+               #item.feature_vector.display()
 
 
 
@@ -130,6 +141,18 @@ class TrafficMonitor:
         self.main_buckets.scan_and_swap(self.alternative_buckets, self.alpha, T_now, self.T_window)
 
 if __name__=="__main__":
-    bucketArray=BucketArray(10,3)
-    bucketArray.insert(["aaa","bbb"])
+    bucketArray=BucketArray(10,4)
+    file_path = ["../data1/02.txt", "../data1/00.txt", "../data1/01.txt", "../data1/03.txt", "../data1/04.txt"]
+    starttime=time.time()
+    for path in file_path[:1]:
+        # 逐行读取文件并统计源 IP 地址
+        with open(path, "r", encoding="utf-8") as file:
+            for line in file:
+                # 去掉行尾换行符，并按空格分割
+                parts = line.strip().split()
+                if len(parts) == 2:  # 确保格式正确
+                    bucketArray.insert(parts)
+
+    endtime=time.time()
+    print("%.2f s"%(endtime-starttime))
     bucketArray.display()
