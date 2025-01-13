@@ -45,9 +45,15 @@ class CountMinSketch:
 
         return min_count
 
+    def display(self):
+        print("Count-Min Sketch Table:")
+        for i, row in enumerate(self.table):
+            print(f"row {i + 1}: {row}")
+        return
+
 # 测试 Count-Min Sketch
 if __name__ == "__main__":
-    cms = CountMinSketch(width=1000, depth=5)
+    cms = CountMinSketch(width=50, depth=5)
 
     # 添加元素
     cms.add("apple")
@@ -58,3 +64,4 @@ if __name__ == "__main__":
     print("apple:", cms.count("apple"))  # 输出 2
     print("banana:", cms.count("banana"))  # 输出 1
     print("cherry:", cms.count("cherry"))  # 输出 0
+    cms.display()

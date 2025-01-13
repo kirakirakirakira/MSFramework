@@ -21,7 +21,7 @@ class BucketArray:
         self.buckets_array=[[None] * sizeA,[None] * sizeB]
         self.alpha=0.5 #to be defined
         self.t_window=1000 #time window for measurement
-        self.t_entry = time.time()
+        self.t_entry = time.time() #start time static
 
     def is_full(self):
         return all(bucket is not None for bucket in self.buckets)
@@ -55,20 +55,25 @@ class BucketArray:
 
     def insert(self, packet:list[str]):
         index = self.find_insert_index(packet[0])
+        if index is None:
+            self.replace_least_S(packet[0])
+            return
         if self.buckets_array[index[0]][index[1]] is None:
             self.buckets_array[index[0]][index[1]] = Bucket(packet[0], 10,10)
             self.buckets_array[index[0]][index[1]].feature_vector.add(packet[1])
-            self.buckets_array[index[0]][index[1]].update_S(self.alpha, time.time(), t_window=1000)
+            self.buckets_array[index[0]][index[1]].update_S(self.alpha, self.t_entry, self.t_window)
+
         else:
             self.buckets_array[index[0]][index[1]].feature_vector.add(packet[1])
+        return
 
-    def replace_least_S(self, fp, feature_vector, similarity_score, alpha, T_now, T_window):
+    def replace_least_S(self, fp):
         min_S_index = min(
-            range(len(self.buckets)),
-            key=lambda i: self.buckets[i].S if self.buckets[i] is not None else float('inf')
+            range(len(self.buckets_array[1])),
+            key=lambda i: self.buckets_array[1][i].S if self.buckets_array[1][i] is not None else float('inf')
         )
-        self.buckets[min_S_index] = Bucket(fp, feature_vector, similarity_score, T_now)
-        self.buckets[min_S_index].update_S(alpha, T_now, T_window)
+        self.buckets_array[1][min_S_index] = Bucket(fp,width=10,height=10)
+        self.buckets_array[1][min_S_index].update_S(self.alpha, self.t_entry, self.t_window)
 
     def scan_and_swap(self, other_array, alpha, T_now, T_window):
         self.buckets = [
@@ -89,6 +94,19 @@ class BucketArray:
             self.buckets[min_index], other_array.buckets[max_index] = (
                 other_array.buckets[max_index], self.buckets[min_index]
             )
+
+
+    def display(self):
+        print("main buckets:")
+        for i,item in enumerate(self.buckets_array[0]):
+            print("No.%d: "%i,end=" ")
+            if item is None:
+                print("None")
+            else:
+                print("flow id:%s, similarity score:%.2f, S:%.2f"%(item.fp,item.similarity_score,item.S))
+                item.feature_vector.display()
+
+
 
 class TrafficMonitor:
     def __init__(self, main_size, alternative_size, alpha, T_window):
@@ -114,3 +132,4 @@ class TrafficMonitor:
 if __name__=="__main__":
     bucketArray=BucketArray(10,3)
     bucketArray.insert(["aaa","bbb"])
+    bucketArray.display()
