@@ -71,7 +71,29 @@ def jaccard_similarity(frequency_dict_a, frequency_dict_b):
         return 0.0
     return intersection_sum / union_sum
 
+def jaccard_similarity(frequency_dict_a, frequency_dict_b):
+    """
+    计算两个多重集合的Jaccard相似度
+    :param frequency_dict_a: 数据集A的频率字典
+    :param frequency_dict_b: 数据集B的频率字典
+    :return: Jaccard相似度
+    """
+    # 计算交集部分
+    intersection_sum = 0
+    for i in frequency_dict_a:
+        if i in frequency_dict_b:
+            intersection_sum += min(frequency_dict_a[i], frequency_dict_b[i])
 
+    # 计算并集部分
+    union_sum = 0
+    all_items = set(frequency_dict_a.keys()).union(set(frequency_dict_b.keys()))
+    for item in all_items:
+        union_sum += max(frequency_dict_a.get(item, 0), frequency_dict_b.get(item, 0))
+
+    # Jaccard相似度
+    if union_sum == 0:  # 防止除以0
+        return 0.0
+    return intersection_sum / union_sum
 
 
 

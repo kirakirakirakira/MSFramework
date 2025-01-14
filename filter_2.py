@@ -34,7 +34,7 @@ class BucketArray:
         self.t_entry = time.time()  #start time static
         self.scan_times = 1
         self.abnormal_data_for_filter2 = StaticData(CM_col=self.col, CM_row=self.row).data_for_filter2
-        self.threshold = 0.3
+        self.threshold = 0.2
 
     def find_insert_index(self, fp):
         empty_index0, empty_index1 = None, None
@@ -121,9 +121,6 @@ class BucketArray:
                     self.buckets_array[1][max_S_index_B],
                     self.buckets_array[0][min_S_index_A],
                 )
-            else:
-                print("No valid buckets to swap or swap condition not met.")
-
         self.scan_times=(1+self.scan_times)%alltimes
         return final_list
 

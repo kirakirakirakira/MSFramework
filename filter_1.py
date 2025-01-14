@@ -14,7 +14,7 @@ class Filter1:
         self.fplist=["" for _ in range(rows)]
         self.simi_list=[0 for _ in range(rows)]
         self.scan_times=1
-        self.threshold=0.8 #to be modified
+        self.threshold=0.6 #to be modified
 
         #abnormal flow
         self.abnormal_data_for_filter1=StaticData(self.cols).data_for_filter1
