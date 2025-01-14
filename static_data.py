@@ -53,10 +53,6 @@ class StaticData:
 
 
 if __name__=="__main__":
-    staticdata=StaticData()
-
-    print(len(staticdata.abnormal_data))
-    random_key, random_value = random.choice(list(staticdata.abnormal_data.items()))
-    print(f"随机选择的 key: {random_key}, value: {len(random_value)}")
-    print(staticdata.fplist[:10])
-    print(staticdata.data_for_filter1[:10])
+    staticdata=StaticData(100,100,100)
+    for j in staticdata.data_for_filter2:
+        j.display()

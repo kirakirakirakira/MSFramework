@@ -47,7 +47,7 @@ class Filter1:
 
 
     def scan(self,times=10):
-        flow_to_next_filter=[]
+        flow_to_next_filter=set()
         if self.scan_times==0:
             for i in range(self.rows):
                 maxsim=0
@@ -62,7 +62,7 @@ class Filter1:
                 self.simi_list[i]=maxsim
                 #mark and clear potential abnormal flow id
                 if maxsim>self.threshold:
-                    flow_to_next_filter.append(self.fplist[i])
+                    flow_to_next_filter.add(self.fplist[i])
                     self.data[i]=[0 for _ in range(self.cols)]
                     self.fplist[i]=""
                     self.simi_list[i]=0
