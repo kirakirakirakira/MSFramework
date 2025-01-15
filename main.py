@@ -8,8 +8,8 @@ abnormal_flow_id_from_filter1=set()
 final_abnormal_flow_id=set()
 
 
-filter1=Filter1(100,150)
-bucketArray=BucketArray(100,500,200,100)
+filter1=Filter1(200,300)
+bucketArray=BucketArray(1000,500,400,150)
 start_time = time.time()
 
 file_path = ["../data1/02.txt","../data1/00.txt","../data1/01.txt","../data1/03.txt","../data1/04.txt"]
@@ -18,7 +18,8 @@ for path in file_path[:1]:
     # 一次性读取文件内容到内存
     with open(path, "r", encoding="utf-8") as file:
         lines = file.readlines()  # 将文件所有行读入列表
-
+    length=len(lines)
+    ct=0
     # 遍历读取的每一行
     for line in lines:
         # 去掉行尾换行符，并按空格分割
@@ -32,6 +33,10 @@ for path in file_path[:1]:
             elif parts[0] in final_abnormal_flow_id:
                 bucketArray.insert(parts)
                 final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(10000))
+            ct+=1
+            if ct%100000==0:
+                percent=ct/length
+                print("%.2f complete. "%percent)
 
 end_time1 = time.time()
 execution_time = end_time1 - start_time

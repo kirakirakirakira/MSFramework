@@ -5,7 +5,7 @@ import sys
 from matplotlib import pyplot as plt
 import time
 import json
-from simiSketch import jaccard_similarity
+from simiSketch import jaccard_similarity,jaccard_est_of_simiSketch_CM
 
 def random_pick_ips(counter, n):
     """
@@ -75,6 +75,7 @@ def load_json():
             flow_dict[source_ip][destination_ip] += 1
     return flow_dict
 if __name__ == "__main__":
+    starttime=time.time()
     all_data_dict=data_analyze()
     ab_data_dict=load_json()
     print("length of all_data_dict is %d"%len(all_data_dict.keys()))
@@ -87,9 +88,13 @@ if __name__ == "__main__":
                 print("flow %s is similar to abnormal flow %s with rate %.2f"%(key1,key2,simi))
         if ct%10000==0:
             print("round %d complete."%(ct/10000))
+            endtime=time.time()
+
+            print("%.2f seconds has passed."%(endtime-starttime))
         ct+=1
 
-
-
+    endtime = time.time()
+    fulltime=endtime-starttime
+    print("totally %.2f seconds (%d minutes)" % (fulltime,fulltime//60))
 
 
