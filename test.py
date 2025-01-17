@@ -53,10 +53,11 @@ def data_analyze():
 
     # 计算并打印执行时间
     execution_time = end_time1 - start_time
-    print(f"统计部分代码执行时间: {execution_time:.2f} 秒")
+    print(f"构建<f,e>字典执行时间: {execution_time:.2f} 秒")
     return flow_dict
 
 def load_json():
+    starttime=time.time()
     with open("abnormal_data.json", "r", encoding="utf-8") as file:
         original_data = json.load(file)
     flow_dict = {}
@@ -73,6 +74,9 @@ def load_json():
 
             # 增加计数
             flow_dict[source_ip][destination_ip] += 1
+    endtime = time.time()
+    execution_time=endtime-starttime
+    print(f"导入异常流并构建字典执行时间: {execution_time:.2f} 秒")
     return flow_dict
 if __name__ == "__main__":
     starttime=time.time()
@@ -80,21 +84,40 @@ if __name__ == "__main__":
     ab_data_dict=load_json()
     print("length of all_data_dict is %d"%len(all_data_dict.keys()))
     print("length of ab_data_dict is %d" % len(ab_data_dict.keys()))
-    ct=1
+    rounds=len(all_data_dict.items())*len(ab_data_dict.items())
+    print("rounds: %d"%rounds)
+
+    onetenthrounds=rounds//10000
+    ct=0
+    abnormal_flow_larger_than_0_5=set()
+    abnormal_flow_larger_than_0_6 = set()
     for key1, value1 in all_data_dict.items():
         for key2, value2 in ab_data_dict.items():
             simi=jaccard_similarity(value1,value2)
             if simi>0.6:
                 print("flow %s is similar to abnormal flow %s with rate %.2f"%(key1,key2,simi))
-        if ct%10000==0:
-            print("round %d complete."%(ct/10000))
+                abnormal_flow_larger_than_0_6.add(key1)
+            if simi>0.5:
+                print("flow %s is similar to abnormal flow %s with rate %.2f"%(key1,key2,simi))
+                abnormal_flow_larger_than_0_5.add(key1)
+            ct += 1
+        if ct%onetenthrounds==0:
+            print("%d/10000 complete."%(ct//onetenthrounds))
             endtime=time.time()
 
             print("%.2f seconds has passed."%(endtime-starttime))
-        ct+=1
+
+
+
+
+    # 转换为列表并存入 JSON 文件
+    with open("abnormal_flow_larger_than_0_5.json", "w", encoding="utf-8") as file:
+        json.dump(list(abnormal_flow_larger_than_0_5), file, indent=4)
+    with open("abnormal_flow_larger_than_0_6.json", "w", encoding="utf-8") as file:
+        json.dump(list(abnormal_flow_larger_than_0_6), file, indent=4)
 
     endtime = time.time()
     fulltime=endtime-starttime
-    print("totally %.2f seconds (%d minutes)" % (fulltime,fulltime//60))
+    print("总执行时间 %.2f seconds (%d minutes)" % (fulltime,fulltime//60))
 
 

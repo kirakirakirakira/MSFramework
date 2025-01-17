@@ -1,5 +1,7 @@
 import json
 import random
+import time
+
 import mmh3
 
 from CMSketch import CountMinSketch
@@ -31,19 +33,27 @@ class StaticData:
         return index
 
     def update_data_for_filter1(self):
+        starttime=time.time()
         for i in range(len(self.fplist)):
             fid=self.fplist[i]
             eids=self.abnormal_data[fid]
             for j in eids:
                 self.data_for_filter1[i][self.mmhash(j)]+=1
+        endtime=time.time()
+        exetime=endtime-starttime
+        print("构建异常向量组用时：%.2f seconds"%exetime)
         return
 
     def update_data_for_filter2(self):
+        starttime = time.time()
         for i in range(len(self.fplist)):
             fid = self.fplist[i]
             eids = self.abnormal_data[fid]
             for j in eids:
                 self.data_for_filter2[i].add(j)
+        endtime = time.time()
+        exetime = endtime - starttime
+        print("构建异常CM结构用时：%.2f seconds" % exetime)
         return
 
 

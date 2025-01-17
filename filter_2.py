@@ -30,11 +30,11 @@ class BucketArray:
         #main buckets array and alter buckets array
         self.buckets_array = [[None] * sizeA, [None] * sizeB]
         self.alpha = 0.01  #to be defined
-        self.t_window = 1000  #time window for measurement
-        self.t_entry = time.time()  #start time static
         self.scan_times = 1
         self.abnormal_data_for_filter2 = StaticData(CM_col=self.col, CM_row=self.row).data_for_filter2
-        self.threshold = 0.2
+        self.threshold = 0.6
+        self.filter2_scan_time=0
+        self.filter2_insert_time = 0
 
     def find_insert_index(self, fp):
         empty_index0, empty_index1 = None, None
@@ -55,6 +55,7 @@ class BucketArray:
             [1, empty_index1] if empty_index1 is not None else None)
 
     def insert(self, packet: list[str]):
+        starttime = time.time()
         index = self.find_insert_index(packet[0])
         if index is None:
             self.replace_least_S(packet)
@@ -65,6 +66,10 @@ class BucketArray:
 
         else:
             self.buckets_array[index[0]][index[1]].update(self.alpha,packet)
+        endtime=time.time()
+        exetime = endtime - starttime
+        self.filter2_insert_time+=exetime
+        #print("本次bucket array插入用时%.2f" % exetime)
         return
 
     def replace_least_S(self, packet:list[str]):
@@ -76,8 +81,10 @@ class BucketArray:
         self.buckets_array[1][min_S_index].update(self.alpha,packet)
 
     def find_and_swap(self,alltimes):
+
         final_list=set()
         if self.scan_times == 0:
+            starttime = time.time()
             #first calculate similarity
             for j in range(len(self.buckets_array[0])):
                 if self.buckets_array[0][j]:
@@ -121,7 +128,15 @@ class BucketArray:
                     self.buckets_array[1][max_S_index_B],
                     self.buckets_array[0][min_S_index_A],
                 )
+            endtime = time.time()
+            exetime = endtime - starttime
+            self.filter2_scan_time+=exetime
+            #print("本次bucket array扫描用时%.2f" % exetime)
         self.scan_times=(1+self.scan_times)%alltimes
+
+
+
+
         return final_list
 
     def display(self):
@@ -141,7 +156,7 @@ class BucketArray:
                 print("None")
             else:
                 print("flow id:%s, similarity score:%.2f, S:%.2f" % (item.fp, item.similarity_score, item.query_S(self.alpha)))
-            #item.feature_vector.display()
+                #item.feature_vector.display()
 
 
 

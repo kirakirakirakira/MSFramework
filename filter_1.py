@@ -14,12 +14,15 @@ class Filter1:
         self.fplist=["" for _ in range(rows)]
         self.simi_list=[0 for _ in range(rows)]
         self.scan_times=1
-        self.threshold=0.4 #to be modified
-
+        self.threshold=0.8 #to be modified
+        self.staticdata=StaticData(self.cols)
         #abnormal flow
-        self.abnormal_data_for_filter1=StaticData(self.cols).data_for_filter1
-        self.abnormal_flow_ids=StaticData(self.cols).fplist
+        self.abnormal_data_for_filter1=self.staticdata.data_for_filter1
+        self.abnormal_flow_ids=self.staticdata.fplist
+        self.filter1_insert_time=0
+        self.filter1_scan_time=0
     def update(self,item:list[str]):
+        starttime = time.time()
         index = mmh3.hash(item[1], seed=self.cols) % self.cols
         if item[0] in self.fplist:
             self.data[self.fplist.index(item[0])][index]+=1
@@ -45,10 +48,16 @@ class Filter1:
         else:
             self.data[index_of_minsimi][index] -= 1
 
+        endtime = time.time()
+        exetime = endtime - starttime
+        self.filter1_insert_time+=exetime
+        # print("本次filter1插入用时%.2f sec" % exetime)
 
     def scan(self,times=10):
+
         flow_to_next_filter=set()
         if self.scan_times==0:
+            starttime = time.time()
             for i in range(self.rows):
                 maxsim=0
                 for j in self.abnormal_data_for_filter1:
@@ -66,8 +75,12 @@ class Filter1:
                     self.data[i]=[0 for _ in range(self.cols)]
                     self.fplist[i]=""
                     self.simi_list[i]=0
+            endtime = time.time()
+            exetime = endtime - starttime
+            #print("本次filter1扫描用时%.2f sec" % exetime)
+            self.filter1_scan_time += exetime
+        self.scan_times=(self.scan_times+1 )%times
 
-        self.scan_times=(self.scan_times+1)%times
         return flow_to_next_filter
 
     def display(self):
