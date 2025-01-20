@@ -14,6 +14,7 @@ class Bucket:
         self.similarity_score = 0
         self.timestamp=time.time()
 
+
     def update(self, alpha,packet):
         self.feature_vector.add(packet[1])
         self.timestamp = time.time()
@@ -32,27 +33,37 @@ class BucketArray:
         self.alpha = 0.01  #to be defined
         self.scan_times = 1
         self.abnormal_data_for_filter2 = StaticData(CM_col=self.col, CM_row=self.row).data_for_filter2
-        self.threshold = 0.6
+        self.threshold = 0.5
+        #记录总扫描时间
         self.filter2_scan_time=0
+        # 记录总插入时间
         self.filter2_insert_time = 0
+        self.scan_offsetA = 0  # 记录当前扫描的起始索引
+        self.scan_offsetB = 0  # 记录当前扫描的起始索引
+        self.scan_stepA = max(1, sizeA// 5)  # 每次扫描 1/10 的数据，至少扫描 1 个元素
+        self.scan_stepB = max(1, sizeB// 5)
 
     def find_insert_index(self, fp):
         empty_index0, empty_index1 = None, None
-        for i, (bucket0, bucket1) in enumerate(zip(self.buckets_array[0], self.buckets_array[1])):
-            if bucket0 is not None:
-                if bucket0.fp == fp:
+        for i in range(len(self.buckets_array[0])):
+            if self.buckets_array[0][i] is not None:
+                if self.buckets_array[0][i].fp == fp:
                     return [0, i]
             elif empty_index0 is None:
                 empty_index0 = i
 
-            if bucket1 is not None:
-                if bucket1.fp == fp:
+        # **只有当 buckets_array[0] 完全满时，才考虑 buckets_array[1]**
+        if empty_index0 is not None:
+            return [0, empty_index0]
+
+        for i in range(len(self.buckets_array[1])):
+            if self.buckets_array[1][i] is not None:
+                if self.buckets_array[1][i].fp == fp:
                     return [1, i]
             elif empty_index1 is None:
                 empty_index1 = i
 
-        return [0, empty_index0] if empty_index0 is not None else (
-            [1, empty_index1] if empty_index1 is not None else None)
+        return [1, empty_index1] if empty_index1 is not None else None
 
     def insert(self, packet: list[str]):
         starttime = time.time()
@@ -81,62 +92,69 @@ class BucketArray:
         self.buckets_array[1][min_S_index].update(self.alpha,packet)
 
     def find_and_swap(self,alltimes):
-
+        total_size_A = len(self.buckets_array[0])
+        total_size_B = len(self.buckets_array[1])
         final_list=set()
         if self.scan_times == 0:
+
             starttime = time.time()
+            # **确定扫描范围**
+            scan_range_A = range(self.scan_offsetA, min(self.scan_offsetA + self.scan_stepA, total_size_A))
+            scan_range_B = range(self.scan_offsetB, min(self.scan_offsetB + self.scan_stepB, total_size_B))
+
+
             #first calculate similarity
-            for j in range(len(self.buckets_array[0])):
-                if self.buckets_array[0][j]:
-                    maxsimi=0
-                    for cms in self.abnormal_data_for_filter2:
-                        temp=jaccard_est_of_simiSketch_CM(self.buckets_array[0][j].feature_vector,cms)
-                        if temp>maxsimi:
-                            maxsimi=temp
-                    self.buckets_array[0][j].similarity_score=maxsimi
-                    if self.buckets_array[0][j].similarity_score>self.threshold:
-                        final_list.add(self.buckets_array[0][j].fp)
+            min_S_index_A, min_S_value = None, float('inf')
+            for j in scan_range_A:
+                bucket = self.buckets_array[0][j]
+                if bucket:
+                    maxsimi = max(jaccard_est_of_simiSketch_CM(bucket.feature_vector, cms)
+                                  for cms in self.abnormal_data_for_filter2)
+                    bucket.similarity_score = maxsimi
+
+                    if bucket.similarity_score > self.threshold:
+                        final_list.add(bucket.fp)
                         self.buckets_array[0][j] = None
+                    else:
+                        S_value = bucket.query_S(self.alpha)
+                        if S_value < min_S_value:
+                            min_S_index_A, min_S_value = j, S_value
 
+            # **遍历备用存 buckets_array[1]**
+            max_S_index_B, max_S_value = None, float('-inf')
+            for j in scan_range_B:
+                bucket = self.buckets_array[1][j]
+                if bucket:
+                    maxsimi = max(jaccard_est_of_simiSketch_CM(bucket.feature_vector, cms)
+                                  for cms in self.abnormal_data_for_filter2)
+                    bucket.similarity_score = maxsimi
 
-            for j in range(len(self.buckets_array[1])):
-                if self.buckets_array[1][j]:
-                    maxsimi=0
-                    for cms in self.abnormal_data_for_filter2:
-                        temp=jaccard_est_of_simiSketch_CM(self.buckets_array[1][j].feature_vector,cms)
-                        if temp>maxsimi:
-                            maxsimi=temp
-                    self.buckets_array[1][j].similarity_score=maxsimi
+                    S_value = bucket.query_S(self.alpha)
+                    if S_value > max_S_value:
+                        max_S_index_B, max_S_value = j, S_value
 
-            # Find the bucket with the smallest S in self.buckets_array[0]
-            min_S_index_A = None
-            min_S_value = float('inf')
-            for i, bucket in enumerate(self.buckets_array[0]):
-                if bucket is not None and bucket.query_S(self.alpha) < min_S_value:
-                    min_S_index_A = i
-                    min_S_value = bucket.query_S(self.alpha)
-
-            # Find the bucket with the largest S in self.buckets_array[1]
-            max_S_index_B = None
-            max_S_value = float('-inf')
-            for i, bucket in enumerate(self.buckets_array[1]):
-                if bucket is not None and bucket.query_S(self.alpha) > max_S_value:
-                    max_S_index_B = i
-                    max_S_value = bucket.query_S(self.alpha)
+            # **执行交换**
             if min_S_index_A is not None and max_S_index_B is not None and max_S_value > min_S_value:
                 self.buckets_array[0][min_S_index_A], self.buckets_array[1][max_S_index_B] = (
                     self.buckets_array[1][max_S_index_B],
                     self.buckets_array[0][min_S_index_A],
                 )
+
             endtime = time.time()
-            exetime = endtime - starttime
-            self.filter2_scan_time+=exetime
-            #print("本次bucket array扫描用时%.2f" % exetime)
-        self.scan_times=(1+self.scan_times)%alltimes
+            self.filter2_scan_time += (endtime - starttime)
+        #print("scan_offset:%d"%self.scan_offset)
+            # **更新 scan_offset，保证轮转遍历**
+        if self.scan_offsetA + self.scan_stepA>=total_size_A:
+            self.scan_offsetA=0
+        else:
+            self.scan_offsetA = (self.scan_offsetA + self.scan_stepA) % total_size_A
 
+        if self.scan_offsetB + self.scan_stepB>=total_size_B:
+            self.scan_offsetB=0
+        else:
+            self.scan_offsetB = (self.scan_offsetB + self.scan_stepB) % total_size_B
 
-
-
+        self.scan_times = (self.scan_times + 1) % alltimes
         return final_list
 
     def display(self):

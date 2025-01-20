@@ -1,4 +1,5 @@
 # combine filter 1 and filter 2
+import json
 import time
 
 from filter_1 import Filter1
@@ -33,10 +34,10 @@ for path in file_path[:1]:
                 pass
             elif parts[0] not in final_abnormal_flow_id and parts[0] not in abnormal_flow_id_from_filter1:
                 filter1.update(parts)
-                abnormal_flow_id_from_filter1 = (filter1.scan(100000) | abnormal_flow_id_from_filter1)
+                abnormal_flow_id_from_filter1 = (filter1.scan(10000) | abnormal_flow_id_from_filter1)
             elif parts[0] in abnormal_flow_id_from_filter1:
                 bucketArray.insert(parts)
-                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(100000))
+                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(10000))
             ct+=1
             if ct%100000==0:
                 temp_endtime=time.time()
@@ -55,21 +56,33 @@ print("filter1 插入用时：%.2f sec(%d min)"%(filter1.filter1_insert_time,fil
 print("filter1 扫描用时：%.2f sec(%d min)"%(filter1.filter1_scan_time,filter1.filter1_scan_time//60))
 print("bucketArray插入用时：%.2f sec(%d min)"%(bucketArray.filter2_insert_time,bucketArray.filter2_insert_time//60))
 print("bucketArray扫描用时：%.2f sec(%d min)"%(bucketArray.filter2_scan_time,bucketArray.filter2_scan_time//60))
+
+bucketArray.display()
 #pr rr calculate
 abnormal_list=list(final_abnormal_flow_id)
 print("abnormal_flow_id_from_filter1:",end=" ")
 print(abnormal_flow_id_from_filter1)
 print("final_abnormal_flow_id:",end=" ")
 print(final_abnormal_flow_id)
-true_abnormal=filter1.abnormal_flow_ids
-print("true abnormal flow id "+str(true_abnormal))
-tp = len(set(abnormal_list) & set(true_abnormal))
-fp = len(set(abnormal_list) - set(true_abnormal))
-fn = len(set(true_abnormal) - set(abnormal_list))
 
-# 计算准确率和召回率
+
+
+with open("abnormal_flow_larger_than_0_6.json", "r") as f:
+    ground_truth = set(json.load(f))
+
+detected=final_abnormal_flow_id
+print("true abnormal flow id "+str(ground_truth))
+# 读取实验检测出的异常流 IP 集合
+
+# 计算 Precision、Recall 和 F1
+tp = len(ground_truth & detected)  # True Positives
+fp = len(detected - ground_truth)  # False Positives
+fn = len(ground_truth - detected)  # False Negatives
+
 precision = tp / (tp + fp) if (tp + fp) > 0 else 0
 recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
 
-print(f"准确率 (Precision): {precision:.2f}")
-print(f"召回率 (Recall): {recall:.2f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+print(f"F1 Score: {f1:.4f}")
