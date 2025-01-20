@@ -30,7 +30,7 @@ class BucketArray:
         self.row = row
         #main buckets array and alter buckets array
         self.buckets_array = [[None] * sizeA, [None] * sizeB]
-        self.alpha = 0.01  #to be defined
+        self.alpha = 0.02  #to be defined
         self.scan_times = 1
         self.abnormal_data_for_filter2 = StaticData(CM_col=self.col, CM_row=self.row).data_for_filter2
         self.threshold = 0.5
