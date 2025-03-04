@@ -15,7 +15,8 @@ class Filter1:
         self.simi_list=[0 for _ in range(rows)]
         self.scan_times=1
         self.threshold=0.5 #to be modified
-        self.staticdata=StaticData(self.cols)
+        self.staticdata=StaticData(col=self.cols)
+        self.staticdata.update_data_for_filter1()
         #abnormal flow
         self.abnormal_data_for_filter1=self.staticdata.data_for_filter1
         self.abnormal_flow_ids=self.staticdata.fplist
@@ -55,7 +56,8 @@ class Filter1:
 
     def scan(self,times=10):
 
-        flow_to_next_filter=set()
+        flow_to_next_filter=[]
+        flow_content=[]
         if self.scan_times==0:
             starttime = time.time()
             for i in range(self.rows):
@@ -71,7 +73,8 @@ class Filter1:
                 self.simi_list[i]=maxsim
                 #mark and clear potential abnormal flow id
                 if maxsim>self.threshold:
-                    flow_to_next_filter.add(self.fplist[i])
+                    flow_to_next_filter.append(self.fplist[i])
+                    flow_content.append(self.data[i])
                     self.data[i]=[0 for _ in range(self.cols)]
                     self.fplist[i]=""
                     self.simi_list[i]=0
@@ -80,8 +83,9 @@ class Filter1:
             #print("本次filter1扫描用时%.2f sec" % exetime)
             self.filter1_scan_time += exetime
         self.scan_times=(self.scan_times+1 )%times
-
-        return flow_to_next_filter
+        if not flow_to_next_filter:
+            return None
+        return [flow_to_next_filter,flow_content]
 
     def display(self):
         """

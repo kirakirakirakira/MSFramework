@@ -27,9 +27,10 @@ class CountMinSketch:
         :param item: 要添加的元素
         """
         item = str(item)  # 确保输入是字符串
-        for seed in range(self.depth):
+
+        for seed in range(self.width,self.depth+self.width):
             index = self._hash(item, seed)
-            self.table[seed][index] += 1
+            self.table[seed-self.width][index] += 1
 
     def count(self, item):
         """
@@ -39,27 +40,28 @@ class CountMinSketch:
         """
         item = str(item)  # 确保输入是字符串
         min_count = float('inf')  # 初始化为正无穷，便于比
-        for seed in range(self.depth):
+        for seed in range(self.width,self.depth+self.width):
             index = self._hash(item, seed)
-            min_count = min(min_count, self.table[seed][index])  # 更新最小值
+            min_count = min(min_count, self.table[seed-self.width][index])  # 更新最小值
 
         return min_count
 
     def display(self):
-        print("Count-Min Sketch Table:")
         for i, row in enumerate(self.table):
             print(f"row {i + 1}: {row}")
         return
 
 # 测试 Count-Min Sketch
 if __name__ == "__main__":
-    cms = CountMinSketch(width=50, depth=5)
+    cms = CountMinSketch(width=10, depth=5)
 
     # 添加元素
     cms.add("apple")
     cms.add("banana")
     cms.add("apple")
-
+    cms.add("apple")
+    cms.add("cherry")
+    cms.add("apple")
     # 查询元素频率
     print("apple:", cms.count("apple"))  # 输出 2
     print("banana:", cms.count("banana"))  # 输出 1

@@ -6,7 +6,7 @@ from static_data import StaticData
 
 
 class Bucket:
-    def __init__(self, fp=None, width=10, height=10):
+    def __init__(self, fp, width, height):
         self.col = width
         self.row = height
         self.fp = fp
@@ -15,7 +15,7 @@ class Bucket:
         self.timestamp=time.time()
 
 
-    def update(self, alpha,packet):
+    def update(self,packet):
         self.feature_vector.add(packet[1])
         self.timestamp = time.time()
 
@@ -25,14 +25,16 @@ class Bucket:
         return quantity*self.similarity_score
 
 class BucketArray:
-    def __init__(self, sizeA, sizeB, col=10, row=10):
+    def __init__(self, sizeA, sizeB, col=272, row=1):
         self.col = col
         self.row = row
         #main buckets array and alter buckets array
         self.buckets_array = [[None] * sizeA, [None] * sizeB]
         self.alpha = 0.02  #to be defined
         self.scan_times = 1
-        self.abnormal_data_for_filter2 = StaticData(CM_col=self.col, CM_row=self.row).data_for_filter2
+        self.staticdata= StaticData(CM_col=self.col, CM_row=self.row)
+        self.staticdata.update_data_for_filter2()
+        self.abnormal_data_for_filter2 = self.staticdata.data_for_filter2
         self.threshold = 0.5
         #记录总扫描时间
         self.filter2_scan_time=0
@@ -73,23 +75,26 @@ class BucketArray:
             return
         if self.buckets_array[index[0]][index[1]] is None:
             self.buckets_array[index[0]][index[1]] = Bucket(packet[0], self.col, self.row)
-            self.buckets_array[index[0]][index[1]].update(self.alpha,packet)
+            self.buckets_array[index[0]][index[1]].update(packet)
 
         else:
-            self.buckets_array[index[0]][index[1]].update(self.alpha,packet)
+            self.buckets_array[index[0]][index[1]].update(packet)
         endtime=time.time()
         exetime = endtime - starttime
         self.filter2_insert_time+=exetime
         #print("本次bucket array插入用时%.2f" % exetime)
         return
 
-    def replace_least_S(self, packet:list[str]):
+    def find_least_S(self):
         min_S_index = min(
             range(len(self.buckets_array[1])),
             key=lambda i: self.buckets_array[1][i].query_S(self.alpha) if self.buckets_array[1][i] is not None else float('inf')
         )
+        return min_S_index
+    def replace_least_S(self, packet:list[str]):
+        min_S_index = self.find_least_S()
         self.buckets_array[1][min_S_index] = Bucket(packet[0], self.col, self.row)
-        self.buckets_array[1][min_S_index].update(self.alpha,packet)
+        self.buckets_array[1][min_S_index].update(packet)
 
     def find_and_swap(self,alltimes):
         total_size_A = len(self.buckets_array[0])
@@ -99,17 +104,20 @@ class BucketArray:
 
             starttime = time.time()
             # **确定扫描范围**
-            scan_range_A = range(self.scan_offsetA, min(self.scan_offsetA + self.scan_stepA, total_size_A))
-            scan_range_B = range(self.scan_offsetB, min(self.scan_offsetB + self.scan_stepB, total_size_B))
+            # scan_range_A = range(self.scan_offsetA, min(self.scan_offsetA + self.scan_stepA, total_size_A))
+            # scan_range_B = range(self.scan_offsetB, min(self.scan_offsetB + self.scan_stepB, total_size_B))
 
 
             #first calculate similarity
             min_S_index_A, min_S_value = None, float('inf')
-            for j in scan_range_A:
+            for j in range(total_size_A):
                 bucket = self.buckets_array[0][j]
                 if bucket:
+
                     maxsimi = max(jaccard_est_of_simiSketch_CM(bucket.feature_vector, cms)
                                   for cms in self.abnormal_data_for_filter2)
+                    # if bucket.fp == "205.190.20.171":
+                    #     print(maxsimi)
                     bucket.similarity_score = maxsimi
 
                     if bucket.similarity_score > self.threshold:
@@ -122,7 +130,7 @@ class BucketArray:
 
             # **遍历备用存 buckets_array[1]**
             max_S_index_B, max_S_value = None, float('-inf')
-            for j in scan_range_B:
+            for j in range(total_size_B):
                 bucket = self.buckets_array[1][j]
                 if bucket:
                     maxsimi = max(jaccard_est_of_simiSketch_CM(bucket.feature_vector, cms)
@@ -144,15 +152,15 @@ class BucketArray:
             self.filter2_scan_time += (endtime - starttime)
         #print("scan_offset:%d"%self.scan_offset)
             # **更新 scan_offset，保证轮转遍历**
-        if self.scan_offsetA + self.scan_stepA>=total_size_A:
-            self.scan_offsetA=0
-        else:
-            self.scan_offsetA = (self.scan_offsetA + self.scan_stepA) % total_size_A
-
-        if self.scan_offsetB + self.scan_stepB>=total_size_B:
-            self.scan_offsetB=0
-        else:
-            self.scan_offsetB = (self.scan_offsetB + self.scan_stepB) % total_size_B
+        # if self.scan_offsetA + self.scan_stepA>=total_size_A:
+        #     self.scan_offsetA=0
+        # else:
+        #     self.scan_offsetA = (self.scan_offsetA + self.scan_stepA) % total_size_A
+        #
+        # if self.scan_offsetB + self.scan_stepB>=total_size_B:
+        #     self.scan_offsetB=0
+        # else:
+        #     self.scan_offsetB = (self.scan_offsetB + self.scan_stepB) % total_size_B
 
         self.scan_times = (self.scan_times + 1) % alltimes
         return final_list
@@ -165,7 +173,7 @@ class BucketArray:
                 print("None")
             else:
                 print("flow id:%s, similarity score:%.2f, S:%.2f" % (item.fp, item.similarity_score, item.query_S(self.alpha)))
-                #item.feature_vector.display()
+                item.feature_vector.display()
 
         print("alter buckets:")
         for i, item in enumerate(self.buckets_array[1]):
@@ -174,7 +182,7 @@ class BucketArray:
                 print("None")
             else:
                 print("flow id:%s, similarity score:%.2f, S:%.2f" % (item.fp, item.similarity_score, item.query_S(self.alpha)))
-                #item.feature_vector.display()
+                item.feature_vector.display()
 
 
 
