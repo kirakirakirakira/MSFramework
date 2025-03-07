@@ -51,8 +51,8 @@ class StaticData:
         endtime=time.time()
         exetime=endtime-starttime
         print("构建异常向量组用时：%.2f seconds"%exetime)
-        for j in self.data_for_filter1:
-            print(j)
+        # for j in self.data_for_filter1:
+        #     print(j)
         return
 
     def update_data_for_filter2(self):
@@ -61,15 +61,15 @@ class StaticData:
             fid = self.fplist[i]
             eids = self.abnormal_data[fid]
             for key,value in eids.items():
-                print(key)
-                print(value)
+                # print(key)
+                # print(value)
                 for j in range(value):
                     self.data_for_filter2[i].add(key)
         endtime = time.time()
         exetime = endtime - starttime
         print("构建异常CM结构用时：%.2f seconds" % exetime)
-        for cm in self.data_for_filter2:
-            cm.display()
+        # for cm in self.data_for_filter2:
+        #     cm.display()
         return
 
 

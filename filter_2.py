@@ -35,7 +35,7 @@ class BucketArray:
         self.staticdata= StaticData(CM_col=self.col, CM_row=self.row)
         self.staticdata.update_data_for_filter2()
         self.abnormal_data_for_filter2 = self.staticdata.data_for_filter2
-        self.threshold = 0.5
+        self.threshold = 0.4
         #记录总扫描时间
         self.filter2_scan_time=0
         # 记录总插入时间

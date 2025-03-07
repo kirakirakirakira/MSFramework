@@ -23,9 +23,9 @@ def random_pick_ips(counter, n):
 
 
 
-def data_analyze():
+def data_analyze(data_num):
     """
-
+    :param data_num: 输入的数据包的数量
     :return: {flow_id:{e_id:count}}字典
     """
     # 记录开始时间
@@ -42,7 +42,7 @@ def data_analyze():
     # 逐行读取文件并统计源 IP 地址
         with open(path, "r", encoding="utf-8") as file:
             lines = file.readlines()
-            for line in lines[:500000]:
+            for line in lines[:data_num]:
                 # 去掉行尾换行符，并按空格分割
                 parts = line.strip().split()
                 if len(parts) == 2:  # 确保格式正确
@@ -71,16 +71,18 @@ def load_json():
     print(f"导入异常流并构建字典执行时间: {execution_time:.2f} 秒")
     return original_data
 
-def get_abnormal_data(data):
+def get_abnormal_data(data,card,freq):
     """
 
+    :param card: 基数范围
+    :param freq: 频率范围
     :param data: 经过统计的源数据
     :return: 按规则筛选过的数据，保存为json
     """
     filtered_flows = {
         flow_id: e_dict
         for flow_id, e_dict in data.items()
-        if len(e_dict) > 2000 or sum(e_dict.values()) > 5000
+        if len(e_dict) > card or sum(e_dict.values()) > freq
     }
     with open("filtered_flows.json", "w") as f:
         json.dump(filtered_flows, f, indent=4)
@@ -93,7 +95,7 @@ if __name__ == "__main__":
 
 
     starttime=time.time()
-    all_data_dict=data_analyze()
+    all_data_dict=data_analyze(10000000)
     # ab_data_dict=load_json()
     print("length of all_data_dict is %d"%len(all_data_dict.keys()))
     #pprint(all_data_dict)
@@ -111,7 +113,7 @@ if __name__ == "__main__":
 
     print("数据已保存到 transformed_output.json")
 
-    get_abnormal_data(all_data_dict)
+    get_abnormal_data(all_data_dict,10000,20000)
 
     with open("filtered_flows.json", "r") as f:
         ground_truth = json.load(f).keys()

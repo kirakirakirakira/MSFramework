@@ -19,7 +19,7 @@ start_read_time=time.time()
 for path in file_path[:1]:
     # 一次性读取文件内容到内存
     with open(path, "r", encoding="utf-8") as file:
-        lines = file.readlines()[:500000]  # 将文件所有行读入列表
+        lines = file.readlines()[:10000000]  # 将文件所有行读入列表
     print("file length:%d"%len(lines))
     end_read_time = time.time()
     read_time=end_read_time-start_read_time
@@ -36,7 +36,7 @@ for path in file_path[:1]:
                 pass
             elif parts[0] not in final_abnormal_flow_id and parts[0] not in abnormal_flow_id_from_filter1:
                 filter1.update(parts)
-                scan_result=filter1.scan(100)
+                scan_result=filter1.scan(5000)
                 if scan_result is not None:
                     abnormal_flow_id_from_filter1 = (set(scan_result[0]) | abnormal_flow_id_from_filter1)
                     for k in range(len(scan_result[0])):
@@ -45,8 +45,9 @@ for path in file_path[:1]:
                             minS=bucketArray.find_least_S()
                             bucketArray.buckets_array[1][minS]=Bucket(scan_result[0][k], bucketArray.col, bucketArray.row)
                             for i in range(bucketArray.row):
-                                bucketArray[1][minS].feature_vector.table[i]=scan_result[1][k]
-                        if bucketArray.buckets_array[index[0]][index[1]] is None:
+                                bucketArray.buckets_array[1][minS].feature_vector.table[i]=scan_result[1][k]
+
+                        elif bucketArray.buckets_array[index[0]][index[1]] is None:
                             bucketArray.buckets_array[index[0]][index[1]] = Bucket(scan_result[0][k], bucketArray.col, bucketArray.row)
                             for i in range(bucketArray.row):
                                 bucketArray.buckets_array[index[0]][index[1]].feature_vector.table[i]=scan_result[1][k]
@@ -54,7 +55,7 @@ for path in file_path[:1]:
 
             elif parts[0] in abnormal_flow_id_from_filter1:
                 bucketArray.insert(parts)
-                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(10))
+                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(5000))
             ct+=1
             if ct%1000==0:
                 temp_endtime=time.time()
