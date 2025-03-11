@@ -35,15 +35,11 @@ class BucketArray:
         self.staticdata= StaticData(CM_col=self.col, CM_row=self.row)
         self.staticdata.update_data_for_filter2()
         self.abnormal_data_for_filter2 = self.staticdata.data_for_filter2
-        self.threshold = 0.4
+        self.threshold = 0.3
         #记录总扫描时间
         self.filter2_scan_time=0
         # 记录总插入时间
         self.filter2_insert_time = 0
-        self.scan_offsetA = 0  # 记录当前扫描的起始索引
-        self.scan_offsetB = 0  # 记录当前扫描的起始索引
-        self.scan_stepA = max(1, sizeA// 5)  # 每次扫描 1/10 的数据，至少扫描 1 个元素
-        self.scan_stepB = max(1, sizeB// 5)
 
     def find_insert_index(self, fp):
         empty_index0, empty_index1 = None, None

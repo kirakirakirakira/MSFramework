@@ -2,7 +2,7 @@ import mmh3
 import numpy as np
 
 class CountMinSketch:
-    def __init__(self, width, depth):
+    def __init__(self, width, depth,max_counter_size=2**16-1):
         """
         初始化 Count-Min Sketch
         :param width: 哈希表的宽度（每个哈希函数的桶数）
@@ -11,6 +11,7 @@ class CountMinSketch:
         self.width = width
         self.depth = depth
         self.table = np.zeros((depth, width), dtype=int)
+        self.max_counter_size=max_counter_size
 
     def _hash(self, item, seed):
         """
@@ -30,7 +31,7 @@ class CountMinSketch:
 
         for seed in range(self.width,self.depth+self.width):
             index = self._hash(item, seed)
-            self.table[seed-self.width][index] += 1
+            self.table[seed-self.width][index]=np.minimum(self.table[seed-self.width][index]+1,self.max_counter_size)
 
     def count(self, item):
         """
@@ -56,7 +57,8 @@ if __name__ == "__main__":
     cms = CountMinSketch(width=10, depth=5)
 
     # 添加元素
-    cms.add("apple")
+    for i in range(115361):
+        cms.add("apple")
     cms.add("banana")
     cms.add("apple")
     cms.add("apple")

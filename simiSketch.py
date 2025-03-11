@@ -22,7 +22,7 @@ def jaccard_est_of_simiSketch_CM(cms1,cms2):
         for j in range(width):
             numerator+=min(cms1.table[i][j],cms2.table[i][j])
             denominator+=max(cms1.table[i][j],cms2.table[i][j])
-        jaccard_est=min(numerator/denominator if denominator>0 else 0,jaccard_est)
+        jaccard_est=min(numerator/denominator if denominator>0 and numerator>0 else 0,jaccard_est)
     return jaccard_est
 
 def jaccard_est_of_simiSketch_C(cs1,cs2):

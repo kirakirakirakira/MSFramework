@@ -1,7 +1,7 @@
 # combine filter 1 and filter 2
 import json
 import time
-
+import pandas as pd
 from filter_1 import Filter1
 from filter_2 import BucketArray, Bucket
 
@@ -34,7 +34,10 @@ for path in file_path[:1]:
         if len(parts) == 2:
             if parts[0] in final_abnormal_flow_id:
                 pass
-            elif parts[0] not in final_abnormal_flow_id and parts[0] not in abnormal_flow_id_from_filter1:
+            elif parts[0] in abnormal_flow_id_from_filter1:
+                bucketArray.insert(parts)
+                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(5000))
+            else:
                 filter1.update(parts)
                 scan_result=filter1.scan(5000)
                 if scan_result is not None:
@@ -45,19 +48,23 @@ for path in file_path[:1]:
                             minS=bucketArray.find_least_S()
                             bucketArray.buckets_array[1][minS]=Bucket(scan_result[0][k], bucketArray.col, bucketArray.row)
                             for i in range(bucketArray.row):
-                                bucketArray.buckets_array[1][minS].feature_vector.table[i]=scan_result[1][k]
+                                if i==0:
+                                    bucketArray.buckets_array[1][minS].feature_vector.table[i]=scan_result[1][k]
+                                else:
+                                    bucketArray.buckets_array[1][minS].feature_vector.table[i]=[0 for _ in range(bucketArray.col)]
 
                         elif bucketArray.buckets_array[index[0]][index[1]] is None:
                             bucketArray.buckets_array[index[0]][index[1]] = Bucket(scan_result[0][k], bucketArray.col, bucketArray.row)
                             for i in range(bucketArray.row):
-                                bucketArray.buckets_array[index[0]][index[1]].feature_vector.table[i]=scan_result[1][k]
+                                if i==0:
+                                    bucketArray.buckets_array[index[0]][index[1]].feature_vector.table[i]=scan_result[1][k]
+                                else:
+                                    bucketArray.buckets_array[index[0]][index[1]].feature_vector.table[i]=[0 for _ in range(bucketArray.col)]
 
 
-            elif parts[0] in abnormal_flow_id_from_filter1:
-                bucketArray.insert(parts)
-                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(5000))
+
             ct+=1
-            if ct%1000==0:
+            if ct%100000==0:
                 temp_endtime=time.time()
                 percent=ct/length
                 print("%.2f complete. "%percent)
@@ -74,8 +81,10 @@ print("filter1 插入用时：%.2f sec(%d min)"%(filter1.filter1_insert_time,fil
 print("filter1 扫描用时：%.2f sec(%d min)"%(filter1.filter1_scan_time,filter1.filter1_scan_time//60))
 print("bucketArray插入用时：%.2f sec(%d min)"%(bucketArray.filter2_insert_time,bucketArray.filter2_insert_time//60))
 print("bucketArray扫描用时：%.2f sec(%d min)"%(bucketArray.filter2_scan_time,bucketArray.filter2_scan_time//60))
-filter1.display()
-bucketArray.display()
+full_insert_time=filter1.filter1_insert_time+bucketArray.filter2_insert_time
+print("总插入用时:%.2f sec(%d min) "%(full_insert_time,full_insert_time//60))
+# filter1.display()
+# bucketArray.display()
 #pr rr calculate
 abnormal_list=list(final_abnormal_flow_id)
 print("abnormal_flow_id_from_filter1:",end=" ")
@@ -104,3 +113,29 @@ f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 e
 print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 print(f"F1 Score: {f1:.4f}")
+
+data={
+    "packet_size":10000000,
+    'filter1_d': filter1.rows,
+    'filter1_w': filter1.cols,
+    'filter1_ct': 8,
+    'flow_id_size': 32,
+    'simi_size': 4,
+    'timestamp_size': 10,
+    'filter2_main_num': len(bucketArray.buckets_array[0]),
+    'filter2_alter_num': len(bucketArray.buckets_array[1]),
+    'cm_depth': bucketArray.row,
+    'cm_width': bucketArray.col,
+    'cm_ct': 16,
+    'precision':round(precision,4),
+    'recall':round(recall,4),
+    'f1-score':round(f1,4),
+    'insert-time':round(full_insert_time,2),
+    'space(KB)':int((filter1.rows*filter1.cols*8+filter1.rows*32+filter1.rows*4
+                +(len(bucketArray.buckets_array[0])+len(bucketArray.buckets_array[1]))*((bucketArray.row*bucketArray.col*16)+
+                                                                                        (32+4+10)))/8//1024),
+    'filter1_threshold':filter1.threshold,
+    'filter2_threshold':bucketArray.threshold
+    }
+df = pd.DataFrame([data])
+df.to_csv('experiment_result.csv',mode='a', header=False, index=False)

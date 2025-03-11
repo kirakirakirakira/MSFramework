@@ -99,25 +99,25 @@ if __name__ == "__main__":
     # ab_data_dict=load_json()
     print("length of all_data_dict is %d"%len(all_data_dict.keys()))
     #pprint(all_data_dict)
-    transformed_data = {
-        flow_id: {
-            "flow cardinality": len(e_counts),  # e_id 的唯一数量
-            "flow size": sum(e_counts.values())  # 计数总和
-        }
-        for flow_id, e_counts in all_data_dict.items()
-    }
-
-    # 保存到 JSON 文件
-    with open("transformed_output.json", "w", encoding="utf-8") as f:
-        json.dump(transformed_data, f, indent=4, ensure_ascii=False)
-
-    print("数据已保存到 transformed_output.json")
-
-    get_abnormal_data(all_data_dict,10000,20000)
-
-    with open("filtered_flows.json", "r") as f:
-        ground_truth = json.load(f).keys()
-    print(len(ground_truth))
+    # transformed_data = {
+    #     flow_id: {
+    #         "flow cardinality": len(e_counts),  # e_id 的唯一数量
+    #         "flow size": sum(e_counts.values())  # 计数总和
+    #     }
+    #     for flow_id, e_counts in all_data_dict.items()
+    # }
+    #
+    # # 保存到 JSON 文件
+    # with open("transformed_output.json", "w", encoding="utf-8") as f:
+    #     json.dump(transformed_data, f, indent=4, ensure_ascii=False)
+    #
+    # print("数据已保存到 transformed_output.json")
+    #
+    # get_abnormal_data(all_data_dict,10000,20000)
+    #
+    # with open("filtered_flows.json", "r") as f:
+    #     ground_truth = json.load(f).keys()
+    # print(len(ground_truth))
     # print("length of ab_data_dict is %d" % len(ab_data_dict.keys()))
 
 
