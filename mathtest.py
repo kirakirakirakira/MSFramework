@@ -184,10 +184,81 @@ def get_figure_f1_threshold_2():
     plt.title('threshold for part 2 vs. F1-score', fontsize=14)
     plt.grid(True, alpha=0.3)
     plt.show()
+
+
+def plot_space_vs_f1():
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df_maxloghash["space(KB)"], df_maxloghash["f1-score"], label="MaxLogHash", marker="o", color="blue")
+    plt.scatter(df_user["space(KB)"], df_user["f1-score"], label="My Experiment", marker="s", color="red")
+    plt.xlabel("Space (KB)")
+    plt.ylabel("F1-score")
+    plt.legend()
+    plt.title("Space vs. F1-score")
+    plt.show()
+
+def plot_space_vs_f1_curve():
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(df_maxloghash["space(KB)"], df_maxloghash["f1-score"], label="MaxLogHash", marker="o", color="blue", linestyle="-")
+    plt.plot(df_user["space(KB)"], df_user["f1-score"], label="my Experiment", marker="s", color="red", linestyle="-")
+    plt.xlabel("Space (KB)")
+    plt.ylabel("F1-score")
+    plt.legend()
+    plt.title("Space vs. F1-score")
+    plt.show()
+
+
+
+# 绘制时间 vs F1-score
+def plot_time_vs_f1():
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df_maxloghash["time"], df_maxloghash["f1-score"], label="MaxLogHash", marker="o", color="blue",linestyle="-")
+    plt.scatter(df_user["insert-time"], df_user["f1-score"], label="My Experiment", marker="s", color="red",linestyle="-")
+    plt.xlabel("Time (ms)")
+    plt.ylabel("F1-score")
+    plt.legend()
+    plt.title("Time vs. F1-score")
+    plt.show()
+
+
+
+def plot_space_vs_throughput():
+    plt.figure(figsize=(8, 6))
+    plt.scatter(df_maxloghash["space(KB)"], df_maxloghash["throughput"], label="MaxLogHash", marker="o", color="blue")
+    plt.scatter(df_user["space(KB)"], df_user["throughput"], label="My Experiment", marker="s", color="red")
+    plt.xlabel("Space (KB)")
+    plt.ylabel("Throughput (Mpps)")
+    plt.legend()
+    plt.title("Space vs. Throughput")
+    plt.show()
+
+
+
+def plot_space_vs_throughput_curve():
+    plt.figure(figsize=(8, 6))
+    plt.plot(df_maxloghash["space(KB)"], df_maxloghash["throughput"], label="MaxLogHash", marker="o", color="blue",linestyle="-")
+    plt.plot(df_user["space(KB)"], df_user["throughput"], label="My Experiment", marker="s", color="red",linestyle="-")
+    plt.xlabel("Space (KB)")
+    plt.ylabel("Throughput (Mpps)")
+    plt.legend()
+    plt.title("Space vs. Throughput")
+    plt.show()
+
 if __name__=="__main__":
-    temp_data=exp_result()
-    memory_size_test(temp_data)
+    # temp_data=exp_result()
+    # memory_size_test(temp_data)
     # save_to_csv(temp_data)
     #get_figure_throughput_f1()
-    get_figure_f1_threshold_2()
+    # get_figure_f1_threshold_2()
+    df_maxloghash = pd.read_csv("maxlog_experiment_result.csv")
+    df_user = pd.read_csv("experiment_result.csv")
+    df_maxloghash = df_maxloghash.sort_values(by="space(KB)")
+    df_user = df_user.sort_values(by="space(KB)")
+    df_maxloghash["throughput"] = 10 / df_maxloghash["time"]  # 10M packets, time in seconds
+    df_user["throughput"] = 10 / df_user["insert-time"]
+    # plot_space_vs_f1_curve()
+    # plot_time_vs_f1()
+    plot_space_vs_throughput_curve()
+
+
 

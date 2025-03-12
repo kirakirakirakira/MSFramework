@@ -1,3 +1,6 @@
+import json
+import time
+
 from CMSketch import CountMinSketch
 
 #methods for calculating similarity
@@ -71,8 +74,60 @@ def jaccard_similarity(frequency_dict_a, frequency_dict_b):
         return 0.0
     return intersection_sum / union_sum
 
+def abnormal_CM(width,depth):
+    abnormal_flow={}
+    with open("filtered_flows.json", "r", encoding="utf-8") as file:
+        data = json.load(file)
+    for source_ip,des_ips in data.items():
+        abnormal_flow[source_ip]=CountMinSketch(width,depth)
+        for des_ip,num in des_ips.items():
+            for i in range(num):
+                abnormal_flow[source_ip].add(des_ip)
+    return abnormal_flow
 
+def all_flow_CM(width,depth):
+    all_flow={}
+    file_path = ["../data1/02.txt", "../data1/00.txt", "../data1/01.txt", "../data1/03.txt", "../data1/04.txt"]
+    for path in file_path[:1]:
+        # 一次性读取文件内容到内存
+        with open(path, "r", encoding="utf-8") as file:
+            lines = file.readlines()[:10000000]  # 将文件所有行读入列表
+    for line in lines:
+        item = line.strip().split()
+        if item[0] not in all_flow.keys():
+            all_flow[item[0]]=CountMinSketch(width,depth)
+        all_flow[item[0]].add(item[1])
+    return all_flow
+
+def memory_calculate_KB(card,width,depth,counter=16):
+    return int(card*width*depth*counter/8/1024/1024)
 
 if __name__ == "__main__":
-    cms1 = CountMinSketch(1000, 10)
-    cms2 = CountMinSketch(1000, 10)
+    print(memory_calculate_KB(167000,272,1,16))
+    abnormal_flow=abnormal_CM(272,1)
+    abnormal_flow_id=set(abnormal_flow.keys())
+    starttime=time.time()
+    all_flow=all_flow_CM(272,1)
+    print("card：%d"%len(all_flow))
+    print(all_flow.get("82.96.243.186").display())
+    endtime=time.time()
+    alltime=round(endtime-starttime,2)
+    print("用时%.2f s"%alltime)
+    est_ab_flow=set()
+    for ab_ip,ab_CM in abnormal_flow.items():
+        for ip,CM in all_flow.items():
+            if jaccard_est_of_simiSketch_CM(ab_CM,CM)>0.9:
+                est_ab_flow.add(ip)
+    tp = len(abnormal_flow_id & est_ab_flow)  # True Positives
+    fp = len(est_ab_flow - abnormal_flow_id)  # False Positives
+    fn = len(abnormal_flow_id - est_ab_flow)  # False Negatives
+
+    precision = round(tp / (tp + fp) if (tp + fp) > 0 else 0, 4)
+    recall = round(tp / (tp + fn) if (tp + fn) > 0 else 0, 4)
+    f1 = round(2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0, 4)
+    endtime=time.time()
+    real_alltime=round(endtime-starttime,2)
+    print("实际用时%.2f s"%real_alltime)
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1 Score: {f1:.4f}")
