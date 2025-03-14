@@ -3,7 +3,9 @@ import json
 import time
 import pandas as pd
 from filter_1 import Filter1
+from filter_1_with_buckets import Filter1 as Filter1_with_buckets
 from filter_2 import BucketArray, Bucket
+from mathtest import precision_recall_f1_calculate
 
 start_time = time.time()
 abnormal_flow_id_from_filter1=set()
@@ -12,6 +14,9 @@ final_abnormal_flow_id=set()
 
 filter1=Filter1(100,272)
 bucketArray=BucketArray(50,25,272,1)
+
+
+
 
 
 file_path = ["../data1/02.txt","../data1/00.txt","../data1/01.txt","../data1/03.txt","../data1/04.txt"]
@@ -36,10 +41,10 @@ for path in file_path[:1]:
                 pass
             elif parts[0] in abnormal_flow_id_from_filter1:
                 bucketArray.insert(parts)
-                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(5000))
+                final_abnormal_flow_id = (final_abnormal_flow_id | bucketArray.find_and_swap(2000))
             else:
                 filter1.update(parts)
-                scan_result=filter1.scan(5000)
+                scan_result=filter1.scan(2000)
                 if scan_result is not None:
                     abnormal_flow_id_from_filter1 = (set(scan_result[0]) | abnormal_flow_id_from_filter1)
                     for k in range(len(scan_result[0])):
@@ -102,17 +107,7 @@ print("true abnormal flow id "+str(ground_truth))
 # 读取实验检测出的异常流 IP 集合
 
 # 计算 Precision、Recall 和 F1
-tp = len(ground_truth & detected)  # True Positives
-fp = len(detected - ground_truth)  # False Positives
-fn = len(ground_truth - detected)  # False Negatives
-
-precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
-
-print(f"Precision: {precision:.4f}")
-print(f"Recall: {recall:.4f}")
-print(f"F1 Score: {f1:.4f}")
+precision,recall,f1=precision_recall_f1_calculate(ground_truth,detected)[1],precision_recall_f1_calculate(ground_truth,detected)[0],precision_recall_f1_calculate(ground_truth,detected)[2]
 
 data={
     "packet_size":10000000,

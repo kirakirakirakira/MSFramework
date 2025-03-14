@@ -7,13 +7,14 @@ import mmh3
 from static_data import StaticData
 
 class Filter1:
-    def __init__(self,rows:int,cols:int,max_counter=2**8-1):
+    def __init__(self,rows:int,cols:int,max_counter=2**7-1,min_counter=-2**7):
         self.rows = rows
         self.cols = cols
         self.data = [[0 for _ in range(cols)] for _ in range(rows)]
         self.fplist=["" for _ in range(rows)]
         self.simi_list=[0 for _ in range(rows)]
         self.max_counter_size=max_counter
+        self.min_counter_size=min_counter
         self.scan_times=1
         self.threshold=0.5 #to be modified
         self.staticdata=StaticData(col=self.cols)
@@ -41,14 +42,14 @@ class Filter1:
             if self.simi_list[i]<min_simi:
                 min_simi=self.simi_list[i]
                 index_of_minsimi=i
-
         if sum(self.data[index_of_minsimi])<0 or min_simi<0:
             self.fplist[index_of_minsimi]=item[0]
             self.data[index_of_minsimi]=[0 for i in range(self.cols)]
             self.data[index_of_minsimi][index] += 1
             self.simi_list[index_of_minsimi]=0
         else:
-            self.data[index_of_minsimi][index] -= 1
+            #self.data[index_of_minsimi][index] -= 1
+            self.data[index_of_minsimi][index]=max(self.min_counter_size,self.data[index_of_minsimi][index] -1)
 
         endtime = time.time()
         exetime = endtime - starttime

@@ -2,6 +2,29 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+
+
+def precision_recall_f1_calculate(true_ab_flow, detected_ab_flow):
+    """
+
+    :param true_ab_flow: set
+    :param detected_ab_flow: set
+    :return: p,r,f1
+    """
+    tp = len(true_ab_flow & detected_ab_flow)  # True Positives
+    fp = len(detected_ab_flow - true_ab_flow)  # False Positives
+    fn = len(true_ab_flow - detected_ab_flow)  # False Negatives
+
+    p = round(tp / (tp + fp) if (tp + fp) > 0 else 0, 4)
+    r = round(tp / (tp + fn) if (tp + fn) > 0 else 0, 4)
+    f = round(2 * p * r / (p + r) if (p + r) > 0 else 0, 4)
+
+    print(f"Precision: {p:.4f}")
+    print(f"Recall: {r:.4f}")
+    print(f"F1 Score: {f:.4f}")
+    return [p, r, f]
+
+
 def memory_size_test(data):
     filter1_d = data['filter1_d']
     filter1_w = data['filter1_w']

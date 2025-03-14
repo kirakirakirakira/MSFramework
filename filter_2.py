@@ -25,17 +25,17 @@ class Bucket:
         return quantity*self.similarity_score
 
 class BucketArray:
-    def __init__(self, sizeA, sizeB, col=272, row=1):
+    def __init__(self, sizeA, sizeB, col=272, row=1,threshold=0.4,alpha=0.1):
         self.col = col
         self.row = row
         #main buckets array and alter buckets array
         self.buckets_array = [[None] * sizeA, [None] * sizeB]
-        self.alpha = 0.02  #to be defined
+        self.alpha = alpha  #to be defined
         self.scan_times = 1
         self.staticdata= StaticData(CM_col=self.col, CM_row=self.row)
         self.staticdata.update_data_for_filter2()
         self.abnormal_data_for_filter2 = self.staticdata.data_for_filter2
-        self.threshold = 0.3
+        self.threshold = threshold
         #记录总扫描时间
         self.filter2_scan_time=0
         # 记录总插入时间
