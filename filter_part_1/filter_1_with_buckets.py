@@ -8,11 +8,12 @@ from static_data import StaticData
 
 
 class Filter1:
-    def __init__(self, bucket_count: int, entries_per_bucket: int, cols: int, max_counter=2 ** 8 - 1):
+    def __init__(self, bucket_count: int, entries_per_bucket: int, cols: int, max_counter=2 ** 7 - 1,min_counter=-2**7):
         self.bucket_count = bucket_count
         self.entries_per_bucket = entries_per_bucket
         self.cols = cols
         self.max_counter_size = max_counter
+        self.min_counter_size = min_counter
         # 初始化桶结构，每个桶有entries_per_bucket个条目
         self.data = [[[0 for _ in range(cols)] for _ in range(entries_per_bucket)] for _ in range(bucket_count)]
         self.fplist = [["" for _ in range(entries_per_bucket)] for _ in range(bucket_count)]
@@ -64,7 +65,7 @@ class Filter1:
             self.data[bucket][min_entry_idx][index] = 1
             self.simi_list[bucket][min_entry_idx] = 0
         else:
-            self.data[bucket][min_entry_idx][index] = max(0, self.data[bucket][min_entry_idx][index] - 1)
+            self.data[bucket][min_entry_idx][index] = max(self.min_counter_size, self.data[bucket][min_entry_idx][index] - 1)
 
         self.filter1_insert_time += time.time() - starttime
 

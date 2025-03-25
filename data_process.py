@@ -64,7 +64,7 @@ def data_analyze(data_num):
 
 def load_json():
     starttime=time.time()
-    with open("filtered_flows.json", "r", encoding="utf-8") as file:
+    with open("processed_data/filtered_flows.json", "r", encoding="utf-8") as file:
         original_data = json.load(file)
     endtime = time.time()
     execution_time=endtime-starttime
@@ -84,7 +84,7 @@ def get_abnormal_data(data,card,freq):
         for flow_id, e_dict in data.items()
         if len(e_dict) > card or sum(e_dict.values()) > freq
     }
-    with open("filtered_flows.json", "w") as f:
+    with open("processed_data/filtered_flows.json", "w") as f:
         json.dump(filtered_flows, f, indent=4)
 
     print("筛选后的字典已保存到 filtered_flows.json")

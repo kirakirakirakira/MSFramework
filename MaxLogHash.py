@@ -7,9 +7,69 @@ import json
 import pandas as pd
 # define the ceil
 totalShingles = (1 << 32) - 1
+
+
+class MaxLog:
+    def __init__(self, k, seed, randomNoA, randomNoB):
+        """
+        初始化MaxLog类
+        :param k: 哈希函数的数量
+        :param seed: 随机种子，用于哈希函数
+        :param randomNoA: 随机数数组A，长度为k
+        :param randomNoB: 随机数数组B，长度为k
+        """
+        self.k = k
+        self.seed = seed
+        self.randomNoA = randomNoA
+        self.randomNoB = randomNoB
+        self.maxShingleID = [[-1] * self.k, [0] * self.k] # 存储流的MaxLog状态，结构： [[Mu列表], [Su列表]]
+
+    def process_item(self, item_value):
+        """
+        处理单个数据项，更新对应的MaxLog状态
+        :param item_value: 流中的元素值（如目标IP）
+        """
+        # 如果流不存在，初始化其Mu和Su数组
+
+        # 遍历每个哈希函数
+        for x in range(self.k):
+            # 计算哈希值
+            hash_val = mmh3.hash(str(item_value), self.seed)
+            # 应用线性变换并取模
+            temp = (self.randomNoA[x] * hash_val + self.randomNoB[x]) % totalShingles
+            temp_val = temp / float(totalShingles)
+
+            # 处理temp_val为0的特殊情况，避免计算log(0)
+            if temp_val == 0:
+                temp_val = 1.0 / (totalShingles + 1)
+
+            # 计算哈希层级
+            hash_level = math.ceil(-math.log(temp_val, 2))
+
+            # 更新Mu和Su
+            current_mu = self.maxShingleID[0][x]
+            current_su = self.maxShingleID[1][x]
+
+            if hash_level > current_mu:
+                self.maxShingleID[0][x] = hash_level
+                self.maxShingleID[1][x] = 1
+            elif hash_level == current_mu:
+                self.maxShingleID[1][x] = 0
+    def get_max_shingle_id(self):
+        """
+        获取当前存储的MaxLog状态
+        :return: 字典格式的MaxLog状态
+        """
+        return self.maxShingleID
+
+
+
+
+
+
 def get_filtered_flow_maxlog(k,seed,randomNoA, randomNoB):
     maxShingleID = {}
-    with open("filtered_flows.json", "r", encoding="utf-8") as file:
+    with open("processed_data/filtered_flows.json", "r", encoding="utf-8") as file:
         data = json.load(file)
 
     for source_ip,des_ips in data.items():
@@ -35,7 +95,7 @@ def get_filtered_flow_maxlog(k,seed,randomNoA, randomNoB):
     return maxShingleID
 
 
-def MaxLog(k, seed, stream, randomNoA, randomNoB):
+def MaxLog_stream(k, seed, stream, randomNoA, randomNoB):
     """
     :param k
     :param seed: a random seed
@@ -74,20 +134,28 @@ def MaxLog(k, seed, stream, randomNoA, randomNoB):
     return maxShingleID
 
 
-def hash_parameter(k):
+def hash_parameter(k, seed):
     """
-    return a list of k distinct numbers between 0 and  (1 << 32) - 1
+    生成可复现的确定性参数数组
+    :param k: 需要生成的参数数量
+    :param seed: 基础种子值（确保可复现性）
+    :return: 包含k个唯一参数的列表
     """
-    randList = []
-    randIndex = random.randint(0, totalShingles - 1)
-    randList.append(randIndex)
-    while k > 0:
-        while randIndex in randList:
-            randIndex = random.randint(0, totalShingles - 1)
-        randList.append(randIndex)
-        k = k - 1
+    parameters = []
+    for x in range(k):
+        # 为每个参数生成唯一哈希种子
+        hash_seed = mmh3.hash(f"param_{x}", seed) & 0xFFFFFFFF  # 添加索引确保唯一性
 
-    return randList
+        # 生成参数并确保在有效范围内
+        param = mmh3.hash(str(x), hash_seed) % totalShingles
+
+        # 处理哈希冲突（概率极低，但为了健壮性保留）
+        while param in parameters:
+            hash_seed += 1
+            param = mmh3.hash(str(x), hash_seed) % totalShingles
+
+        parameters.append(param)
+    return parameters
 
 
 def estimate(k, maxShingleID, set1, set2):
@@ -110,6 +178,25 @@ def estimate(k, maxShingleID, set1, set2):
     # print num
     jaccard_sim = 1.0 - con * (1 / num) * (1 / 0.7213)
     return jaccard_sim
+
+
+def estimate_maxlog_jaccard_similarity(maxlog1:MaxLog,maxlog2:MaxLog,k):
+    """
+
+    :param maxlog1:
+    :param maxlog2:
+    :param k:
+    :return:
+    """
+    con=1
+    for x in range(k):
+        if maxlog1.maxShingleID[0][x]>maxlog2.maxShingleID[0][x] and maxlog1.maxShingleID[1][x]==1:
+            con+=1
+        elif maxlog1.maxShingleID[0][x]<maxlog2.maxShingleID[0][x] and maxlog2.maxShingleID[1][x]==1:
+            con+=1
+    jaccard_sim = 1.0 - con * (1 / k) * (1 / 0.7213)
+    return jaccard_sim
+
 
 def estimate(k, maxShingleID, abnormal_maxlog,set1, set2):
     """
@@ -182,9 +269,9 @@ if __name__ == "__main__":
     k = int(128)
     for k in {8,24,40,56,78}:
         # two seed arrays for generating k hash functions
-        randomNoA = hash_parameter(k)
+        randomNoA = hash_parameter(k,k)
         #print(randomNoA)
-        randomNoB = hash_parameter(k)
+        randomNoB = hash_parameter(k,k+1)
         #print(randomNoB)
 
         memory_calculate_card_known(k, 170000)
@@ -204,7 +291,7 @@ if __name__ == "__main__":
         #print(lines)
         # stream = generate_synthetic_stream(10000, jaccard_true)
         starttime=time.time()
-        maxShingleID = MaxLog(k, random_seed, stream, randomNoA, randomNoB)
+        maxShingleID = MaxLog_stream(k, random_seed, stream, randomNoA, randomNoB)
         mem=int(memory_calculate(k,maxShingleID))
         endtime=time.time()
         alltime=round(endtime-starttime,2)
@@ -236,4 +323,4 @@ if __name__ == "__main__":
         }
         df = pd.DataFrame([data])
         #mode='a', header=False,
-        df.to_csv('maxlog_experiment_result.csv', mode='a', header=False, index=False)
+        df.to_csv('processed_data/maxlog_experiment_result.csv', mode='a', header=False, index=False)

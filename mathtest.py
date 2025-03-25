@@ -45,6 +45,28 @@ def memory_size_test(data):
     total_KB=total_bit/8//1024
     print("共占用%dKB"%total_KB)
 
+
+def memory_size_test_with_maxlog(data):
+    filter1_d = data['filter1_d']
+    filter1_w = data['filter1_w']
+    filter1_ct = data['filter1_ct']
+    flow_id_size = data['flow_id_size']
+    simi_size = data['simi_size']
+    timestamp_size = data['timestamp_size']
+    filter2_main_num = data['filter2_main_num']
+    filter2_alter_num = data['filter2_alter_num']
+    k=data['k']
+    su=data['su']
+    mu=data['mu']
+    #filter1总空间大小
+    filter1_total_size=filter1_d*filter1_w*filter1_ct+filter1_d*flow_id_size+filter1_d*simi_size
+    #filter2 space
+    filter2_total_size=(filter2_main_num+filter2_alter_num)*((mu+su)*k+(flow_id_size+simi_size+timestamp_size))
+    total_bit=filter1_total_size+filter2_total_size
+    total_KB=total_bit/8//1024
+    print("共占用%dKB"%total_KB)
+
+
 def exp_result():
     data={
     "packet_size":10000000,
@@ -69,13 +91,38 @@ def exp_result():
     }
     return data
 
+def exp_result_maxlog():
+    data={
+    "packet_size":10000000,
+    'filter1_d': 75,
+    'filter1_w': 272,
+    'filter1_ct': 8,
+    'flow_id_size': 32,
+    'simi_size': 4,
+    'timestamp_size': 10,
+    'filter2_main_num': 30,
+    'filter2_alter_num': 20,
+    'k':32,
+    'mu':6,
+    'su':1,
+    'precision':0.0553,
+    'recall':0.9762,
+    'f1-score':0.1047,
+    'insert-time':19.81,
+    'space(KB)':67,
+    'filter1_threshold':0.5,
+    'filter2_threshold':0.8
+    }
+    return data
+
+
 def save_to_csv(data):
     df = pd.DataFrame([data])
     df.to_csv('experiment_result.csv',mode='a', header=False, index=False)
 
 
 def get_figure_space_and_f1():
-    file_path = "experiment_result.csv"  # 替换为你的 CSV 文件路径
+    file_path = "processed_data/experiment_result.csv"  # 替换为你的 CSV 文件路径
     df = pd.read_csv(file_path)
     df_sorted = df.sort_values(by="space(KB)")
 
@@ -99,7 +146,7 @@ def get_figure_space_and_f1():
 
 
 def get_figure_throughput():
-    file_path = "experiment_result.csv"  # 替换为你的 CSV 文件路径
+    file_path = "processed_data/experiment_result.csv"  # 替换为你的 CSV 文件路径
     df = pd.read_csv(file_path)
     # 计算吞吐量（单位：Mpps）
     df['throughput(Mpps)'] = (df['packet_size'] / df['insert-time']) / 1e6
@@ -127,7 +174,7 @@ def get_figure_throughput():
 
 
 def get_figure_p_r_f1_score():
-    file_path = "experiment_result.csv"  # 替换为你的 CSV 文件路径
+    file_path = "processed_data/experiment_result.csv"  # 替换为你的 CSV 文件路径
     df = pd.read_csv(file_path)
     df_sorted = df.sort_values('space(KB)')
     plt.figure(figsize=(12, 6))
@@ -142,7 +189,7 @@ def get_figure_p_r_f1_score():
     plt.show()
 
 def get_figure_throughput_f1():
-    file_path = "experiment_result.csv"  # 替换为你的 CSV 文件路径
+    file_path = "processed_data/experiment_result.csv"  # 替换为你的 CSV 文件路径
     df = pd.read_csv(file_path)
 
     # 计算吞吐量（Mpps）
@@ -182,7 +229,7 @@ def get_figure_throughput_f1():
     plt.show()
 
 def get_figure_f1_threshold_2():
-    file_path = "experiment_result.csv"  # 替换为你的 CSV 文件路径
+    file_path = "processed_data/experiment_result.csv"  # 替换为你的 CSV 文件路径
     df = pd.read_csv(file_path)
 
     # 筛选其他参数相同的组（以 filter1_d=100 的配置为基准）
@@ -273,15 +320,15 @@ if __name__=="__main__":
     # save_to_csv(temp_data)
     #get_figure_throughput_f1()
     # get_figure_f1_threshold_2()
-    df_maxloghash = pd.read_csv("maxlog_experiment_result.csv")
-    df_user = pd.read_csv("experiment_result.csv")
-    df_maxloghash = df_maxloghash.sort_values(by="space(KB)")
-    df_user = df_user.sort_values(by="space(KB)")
-    df_maxloghash["throughput"] = 10 / df_maxloghash["time"]  # 10M packets, time in seconds
-    df_user["throughput"] = 10 / df_user["insert-time"]
+    # df_maxloghash = pd.read_csv("processed_data/maxlog_experiment_result.csv")
+    # df_user = pd.read_csv("processed_data/experiment_result.csv")
+    # df_maxloghash = df_maxloghash.sort_values(by="space(KB)")
+    # df_user = df_user.sort_values(by="space(KB)")
+    # df_maxloghash["throughput"] = 10 / df_maxloghash["time"]  # 10M packets, time in seconds
+    # df_user["throughput"] = 10 / df_user["insert-time"]
     # plot_space_vs_f1_curve()
     # plot_time_vs_f1()
-    plot_space_vs_throughput_curve()
-
+    #plot_space_vs_throughput_curve()
+    memory_size_test_with_maxlog(exp_result_maxlog())
 
 
