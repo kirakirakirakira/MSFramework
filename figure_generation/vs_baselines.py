@@ -1,6 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-
+plt.rcParams.update({
+    'font.size': 12,
+    'axes.titlesize': 14,
+    'axes.labelsize': 13,
+    'xtick.labelsize': 12,
+    'ytick.labelsize': 12,
+    'legend.fontsize': 12,
+    'font.family': 'serif',
+    'pdf.fonttype': 42
+})
 # 定义列名
 columns_minhash = [
     'packet_size', 'entry_size', 'filter1_d', 'filter1_w', 'filter1_ct', 'flow_id_size', 'simi_size', 'timestamp_size',
@@ -81,7 +90,7 @@ user_data = """
 10000000,20,180,272,8,32,4,10,90,45,1,272,16,0.9444,0.8095,0.8718,22.82,121,0.5,0.5
 """
 df_user = pd.DataFrame([line.split(',') for line in user_data.strip().split('\n')], columns=columns_user)
-df_user['method'] = 'my_method'
+df_user['method'] = 'ours'
 
 # 转换数据类型
 numeric_cols = ['space(KB)', 'f1-score', 'insert-time']
@@ -110,8 +119,8 @@ def plot_with_limit(ax, x_col, y_col, ylabel, xlim=(0,150)):
         group_sorted = group.sort_values(x_col)
         ax.plot(group_sorted[x_col], group_sorted[y_col],
                 marker='o', linestyle='-', label=method)
-    ax.set_xlabel('Space (KB)')
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel('Space (KB)', fontweight='bold')
+    ax.set_ylabel(ylabel, fontweight='bold')
     ax.set_xlim(xlim)  # 控制显示范围
     ax.legend()
     ax.grid(True)
@@ -121,10 +130,12 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 6))
 
 # F1-score图表
 plot_with_limit(ax1, 'space(KB)', 'f1-score', 'F1-score', xlim=(0, 150))
-ax1.set_title('Space vs F1-score (0-150KB)')
+ax1.set_title('Space vs F1-score (0-150KB)',fontweight='bold')
 
 # 吞吐量图表
 plot_with_limit(ax2, 'space(KB)', 'throughput', 'Throughput (Mpps)', xlim=(0, 150))
-ax2.set_title('Space vs Throughput (0-150KB)')
-
+ax2.set_title('Space vs Throughput (0-150KB)', fontweight='bold')
+plt.savefig('vs_baseline.png',
+           bbox_inches='tight',
+           facecolor='white')
 plt.show()

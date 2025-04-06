@@ -315,20 +315,17 @@ def plot_space_vs_throughput_curve():
     plt.show()
 
 if __name__=="__main__":
-    # temp_data=exp_result()
-    # memory_size_test(temp_data)
-    # save_to_csv(temp_data)
-    #get_figure_throughput_f1()
-    # get_figure_f1_threshold_2()
-    # df_maxloghash = pd.read_csv("processed_data/maxlog_experiment_result.csv")
-    # df_user = pd.read_csv("processed_data/experiment_result.csv")
-    # df_maxloghash = df_maxloghash.sort_values(by="space(KB)")
-    # df_user = df_user.sort_values(by="space(KB)")
-    # df_maxloghash["throughput"] = 10 / df_maxloghash["time"]  # 10M packets, time in seconds
-    # df_user["throughput"] = 10 / df_user["insert-time"]
-    # plot_space_vs_f1_curve()
-    # plot_time_vs_f1()
-    #plot_space_vs_throughput_curve()
-    memory_size_test_with_maxlog(exp_result_maxlog())
+    temp_data=exp_result()
+    memory_size_test(temp_data)
+    save_to_csv(temp_data)
+    get_figure_throughput_f1()
+    get_figure_f1_threshold_2()
+    df_maxloghash = pd.read_csv("processed_data/maxlog_experiment_result.csv")
+    df_user = pd.read_csv("processed_data/experiment_result.csv")
+    df_maxloghash = df_maxloghash.sort_values(by="space(KB)")
+    df_user = df_user.sort_values(by="space(KB)")
+    df_maxloghash["throughput"] = 10 / df_maxloghash["time"]  # 10M packets, time in seconds
+    df_user["throughput"] = 10 / df_user["insert-time"]
+
 
 

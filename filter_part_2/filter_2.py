@@ -81,24 +81,26 @@ class BucketArray:
             if index is None:
                 minS = self.find_least_S()
                 self.buckets_array[1][minS] = Bucket(scan_result[0][k], self.col, self.row)
-                for i in range(self.row):
-                    if i == 0:
-                        self.buckets_array[1][minS].feature_vector.table[i] = scan_result[1][k]
-                    else:
+                if self.row==1:
+                    self.buckets_array[1][minS].feature_vector.table[0] = [
+                        max(x, 0) for x in scan_result[1][k]
+                    ]
+                else:
+                    for i in range(self.row):
                         self.buckets_array[1][minS].feature_vector.table[i] = [0 for _ in
                                                                                   range(self.col)]
 
             elif self.buckets_array[index[0]][index[1]] is None:
                 self.buckets_array[index[0]][index[1]] = Bucket(scan_result[0][k], self.col,
                                                                    self.row)
-                for i in range(self.row):
-                    if i == 0:
-                        self.buckets_array[index[0]][index[1]].feature_vector.table[i] = \
-                            scan_result[1][k]
-                    else:
+                if self.row == 1:
+                    self.buckets_array[index[0]][index[1]].feature_vector.table[0] = [
+                        max(x, 0) for x in scan_result[1][k]
+                    ]
+                else:
+                    for i in range(self.row):
                         self.buckets_array[index[0]][index[1]].feature_vector.table[i] = [0 for _ in
-                                                                                             range(
-                                                                                                 self.col)]
+                                                                               range(self.col)]
         return
 
 

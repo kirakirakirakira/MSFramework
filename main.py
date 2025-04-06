@@ -184,32 +184,33 @@ def write_in_data(filter_1, filter_2):
     df.to_csv('processed_data/experiment_result.csv', mode='a', header=False, index=False)
 
 if __name__=="__main__":
-    for i in range(11,13):
+    for j in range(1,4):
+        for i in range(1,11):
     #filter1 = Filter1(100, 272)
-        filter1 = ft1(i, 20, 272)
-        #bucketArray = BucketArray(i*10, i*5, 272, 1,threshold=0.5)
-        bucketArray=Bucket_Array_minhash(i*10, i*5,200,threshold=0.9)
-        #bucketArray=Bucket_Array_Maxlog(i*10,i*5,k=128,threshold=0.9)
-        final_abnormal_flow_id = main_process(filter1, bucketArray,2000,2000)
-        print("filter1 插入用时：%.2f sec(%d min)" % (filter1.filter1_insert_time, filter1.filter1_insert_time // 60))
-        print("filter1 扫描用时：%.2f sec(%d min)" % (filter1.filter1_scan_time, filter1.filter1_scan_time // 60))
-        print("bucketArray插入用时：%.2f sec(%d min)" % (bucketArray.filter2_insert_time, bucketArray.filter2_insert_time // 60))
-        print("bucketArray扫描用时：%.2f sec(%d min)" % (bucketArray.filter2_scan_time, bucketArray.filter2_scan_time // 60))
-        full_insert_time = filter1.filter1_insert_time + bucketArray.filter2_insert_time
-        print("总插入用时:%.2f sec(%d min) " % (full_insert_time, full_insert_time // 60))
+            filter1 = ft1(i, 20, 272)
+            bucketArray = BucketArray(i*10, i*5, 272, j,threshold=0.5)
+            #bucketArray=Bucket_Array_minhash(i*10, i*5,200,threshold=0.9)
+            #bucketArray=Bucket_Array_Maxlog(i*10,i*5,k=128,threshold=0.9)
+            final_abnormal_flow_id = main_process(filter1, bucketArray,2000,2000)
+            print("filter1 插入用时：%.2f sec(%d min)" % (filter1.filter1_insert_time, filter1.filter1_insert_time // 60))
+            print("filter1 扫描用时：%.2f sec(%d min)" % (filter1.filter1_scan_time, filter1.filter1_scan_time // 60))
+            print("bucketArray插入用时：%.2f sec(%d min)" % (bucketArray.filter2_insert_time, bucketArray.filter2_insert_time // 60))
+            print("bucketArray扫描用时：%.2f sec(%d min)" % (bucketArray.filter2_scan_time, bucketArray.filter2_scan_time // 60))
+            full_insert_time = filter1.filter1_insert_time + bucketArray.filter2_insert_time
+            print("总插入用时:%.2f sec(%d min) " % (full_insert_time, full_insert_time // 60))
 
-        abnormal_list = list(final_abnormal_flow_id)
-        print("final_abnormal_flow_id:", end=" ")
-        print(final_abnormal_flow_id)
+            abnormal_list = list(final_abnormal_flow_id)
+            print("final_abnormal_flow_id:", end=" ")
+            print(final_abnormal_flow_id)
 
-        with open("processed_data/filtered_flows.json", "r") as f:
-            ground_truth = json.load(f).keys()
+            with open("proces   sed_data/filtered_flows.json", "r") as f:
+                ground_truth = json.load(f).keys()
 
-        detected = final_abnormal_flow_id
-        print("true abnormal flow id " + str(ground_truth))
-        # 读取实验检测出的异常流 IP 集合
+            detected = final_abnormal_flow_id
+            print("true abnormal flow id " + str(ground_truth))
+            # 读取实验检测出的异常流 IP 集合
 
-        # 计算 Precision、Recall 和 F1
-        temp=precision_recall_f1_calculate(ground_truth, detected)
-        precision, recall, f1 = temp[0],temp[1],temp[2]
-        write_in_data(filter1,bucketArray)
+            # 计算 Precision、Recall 和 F1
+            temp=precision_recall_f1_calculate(ground_truth, detected)
+            precision, recall, f1 = temp[0],temp[1],temp[2]
+            write_in_data(filter1,bucketArray)
