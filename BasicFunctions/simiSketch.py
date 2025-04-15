@@ -1,7 +1,7 @@
 import json
 import time
 
-from CMSketch import CountMinSketch
+from BasicFunctions.CMSketch import CountMinSketch
 
 #methods for calculating similarity
 
@@ -76,7 +76,7 @@ def jaccard_similarity(frequency_dict_a, frequency_dict_b):
 
 def abnormal_CM(width,depth):
     abnormal_flow={}
-    with open("processed_data/filtered_flows.json", "r", encoding="utf-8") as file:
+    with open("../processed_data/caida_ab_flow.json", "r", encoding="utf-8") as file:
         data = json.load(file)
     for source_ip,des_ips in data.items():
         abnormal_flow[source_ip]=CountMinSketch(width,depth)

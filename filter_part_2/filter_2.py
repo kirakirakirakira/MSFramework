@@ -1,7 +1,7 @@
 import math
 import time
-from CMSketch import CountMinSketch
-from simiSketch import jaccard_est_of_simiSketch_CM
+from BasicFunctions.CMSketch import CountMinSketch
+from BasicFunctions.simiSketch import jaccard_est_of_simiSketch_CM
 from static_data import StaticData
 
 

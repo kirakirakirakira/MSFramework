@@ -163,6 +163,6 @@ cython_debug/
 #.idea/
 .idea
 
-processed_data/filtered_flows.json
-processed_data/transformed_output.json
+processed_data/caida_ab_flow.json
+processed_data/caida_dict.json
 output.json

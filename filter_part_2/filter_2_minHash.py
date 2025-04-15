@@ -3,9 +3,9 @@ import math
 import time
 from hashlib import sha256
 
-from MinHash import MinHash16, minhash_similarity
+from BasicFunctions.MinHash import MinHash16, minhash_similarity
 from static_data import StaticData
-from MaxLogHash import hash_parameter, MaxLog, estimate_maxlog_jaccard_similarity
+
 
 def _generate_hash_params(seed, k):
     """生成16位参数，确保a为奇数"""

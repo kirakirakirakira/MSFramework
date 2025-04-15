@@ -69,7 +69,7 @@ class MaxLog:
 
 def get_filtered_flow_maxlog(k,seed,randomNoA, randomNoB):
     maxShingleID = {}
-    with open("processed_data/filtered_flows.json", "r", encoding="utf-8") as file:
+    with open("../processed_data/caida_ab_flow.json", "r", encoding="utf-8") as file:
         data = json.load(file)
 
     for source_ip,des_ips in data.items():

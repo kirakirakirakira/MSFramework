@@ -1,12 +1,11 @@
 import json
-import random
 import time
 
 import mmh3
 
-from CMSketch import CountMinSketch
-from MaxLogHash import MaxLog, hash_parameter
-from MinHash import MinHash16, generate_hash_params
+from BasicFunctions.CMSketch import CountMinSketch
+from BasicFunctions.MaxLogHash import MaxLog, hash_parameter
+from BasicFunctions.MinHash import MinHash16, generate_hash_params
 
 # raw abnormal data:f:{e1,e2,e3,...}
 # filter1 data
@@ -14,7 +13,7 @@ from MinHash import MinHash16, generate_hash_params
 # marked flow
 
 # load abnormal data
-with open("processed_data/filtered_flows.json", "r", encoding="utf-8") as file:
+with open("processed_data/IMC_ab_flow.json", "r", encoding="utf-8") as file:
     loaded_data = json.load(file)
 
 

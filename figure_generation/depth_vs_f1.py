@@ -1,17 +1,19 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 
 # 设置学术图表样式
 plt.rcParams.update({
-    'font.size': 12,
-    'axes.titlesize': 14,
-    'axes.labelsize': 13,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
-    'legend.fontsize': 12,
-    'font.family': 'serif',
-    'pdf.fonttype': 42
+    'font.size': 18,
+    'axes.titlesize': 22,
+    'axes.labelsize': 18,
+    'xtick.labelsize': 16,
+    'ytick.labelsize': 16,
+    'legend.fontsize': 20,
+    'font.family': 'Times New Roman',
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42,
+    'text.usetex': False,
 })
 
 # 原始数据
@@ -45,47 +47,58 @@ columns = [
     'insert-time', 'space(KB)', 'filter1_threshold', 'filter2_threshold'
 ]
 
-df = pd.DataFrame(data, columns=columns)
 
-# 数据预处理
-df = df[['cm_depth', 'space(KB)', 'f1-score']].astype(float)
+
+df = pd.DataFrame(data, columns=columns)
+df = df[['cm_depth', 'space(KB)', 'f1-score', 'precision', 'recall']].astype(float)
 df.sort_values(['cm_depth', 'space(KB)'], inplace=True)
 
-# 创建颜色映射
-depth_colors = {
-    1: '#1f77b4',  # 蓝色
-    2: '#2ca02c',  # 绿色
-    3: '#d62728'   # 红色
-}
+# 样式设置
+depth_colors = {1: '#1f77b4', 2: '#2ca02c', 3: '#d62728'}
+markers = {1: 'o', 2: 's', 3: '^'}
+linestyles = {1: '--', 2: '-.', 3: '-'}
 
-# 创建画布
-plt.figure(figsize=(10, 6), dpi=300)
+# 绘图函数（横排三个子图 + 上方图例）
+def plot_metrics_vs_depth(df, metrics, ylabels, filename):
+    fig, axs = plt.subplots(1, 3, figsize=(18, 6), dpi=300, sharey=False)
 
-# 绘制各深度曲线
-for depth, group in df.groupby('cm_depth'):
-    plt.plot(group['space(KB)'], group['f1-score'],
-            marker='o' if depth==1 else 's' if depth==2 else '^',
-            linestyle='--' if depth==1 else '-.' if depth==2 else '-',
-            color=depth_colors[depth],
-            markersize=8,
-            linewidth=2.5,
-            label=f'CMS Depth={int(depth)}')
+    for idx, (metric, ylabel) in enumerate(zip(metrics, ylabels)):
+        ax = axs[idx]
+        for depth, group in df.groupby('cm_depth'):
+            ax.plot(group['space(KB)'], group[metric],
+                    label=f'Depth={int(depth)}',
+                    color=depth_colors[depth],
+                    marker=markers[depth],
+                    linestyle=linestyles[depth],
+                    linewidth=2.5,
+                    markersize=7)
 
+        ax.set_xlabel("Memory (KB)", fontweight='bold')
+        ax.set_ylabel(ylabel, fontweight='bold')
+        ax.grid(True, linestyle=':', alpha=0.5)
+        ax.set_xlim(0, 150)
+        ax.set_xticks(range(0, 151, 30))
 
+        if metric == 'f1-score':
+            ax.set_ylim(0.3, 1.0)
+        elif metric == 'precision':
+            ax.set_ylim(0.9, 1.0)
+        else:
+            ax.set_ylim(0, 1.0)
 
-# 设置坐标轴
-plt.xlabel('Memory Usage (KB)', fontweight='bold')
-plt.ylabel('F1-Score', fontweight='bold')
-plt.xlim(0, 150)
-plt.ylim(0.3, 1.0)
-plt.xticks(range(0, 151, 30))
-plt.grid(True, linestyle=':', alpha=0.6)
+        ax.set_title(f"({chr(97+idx)}) {ylabel}", fontweight='bold', y=-0.35)
 
-# 添加图例和标题
-plt.legend(loc='lower right', frameon=True, framealpha=0.9)
-plt.title('Memory vs F1 under different CMS depth', fontweight='bold', pad=15)
+    # 图例统一放在上方
+    handles, labels = axs[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', ncol=len(depth_colors),
+               frameon=True, edgecolor='black', fontsize=16, prop={'weight': 'bold'})
 
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    plt.savefig(f'fig/{filename}.pdf', bbox_inches='tight', facecolor='white')
+    plt.show()
 
-plt.tight_layout()
-plt.savefig('depth_vs_f1', bbox_inches='tight')
-plt.show()
+# 调用函数
+plot_metrics_vs_depth(df,
+                      ['precision', 'recall','f1-score'],
+                      ['Precision', 'Recall','F1-score'],
+                      'metrics_vs_memory_diff_depth')

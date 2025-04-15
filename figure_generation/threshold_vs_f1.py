@@ -1,14 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams.update({
-    'font.size': 12,            # 基础字体大小
-    'axes.titlesize': 14,       # 标题字体大小
-    'axes.labelsize': 13,       # 坐标轴标签
-    'xtick.labelsize': 12,      # X轴刻度
-    'ytick.labelsize': 12,      # Y轴刻度
-    'legend.fontsize': 12,      # 图例字体
-    'font.family': 'serif',     # 学术论文推荐字体
-    'pdf.fonttype': 42          # 确保PDF嵌入字体
+    'font.size': 20,
+    'axes.titlesize': 20,
+    'axes.labelsize': 20,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
+    'legend.fontsize': 20,
+    'font.family': 'serif',
+    'pdf.fonttype': 42
 })
 # 数据准备
 data = [
@@ -38,7 +38,7 @@ df_grouped = df.groupby('threshold for promotion').agg({
 }).reset_index().sort_values('threshold for promotion')
 
 # 创建画布（调整尺寸和DPI）
-plt.figure(figsize=(8, 5), dpi=300)  # 增大DPI到300
+plt.figure(figsize=(12, 5), dpi=300)  # 增大DPI到300
 
 # 绘制三条折线（加粗线条）
 line_styles = {
@@ -61,29 +61,28 @@ for metric, style in line_styles.items():
 # 坐标轴设置
 plt.xticks(df_grouped['threshold for promotion'], fontweight='bold')
 plt.yticks(fontweight='bold')
-plt.xlabel("Promotion Threshold", fontsize=14, labelpad=10,fontweight='bold')
-plt.ylabel("Score", fontsize=14, labelpad=10,fontweight='bold')
+plt.xlabel("Promotion Threshold", labelpad=10,fontweight='bold')
+plt.ylabel("Score",labelpad=10,fontweight='bold')
 
 # 图表修饰
 plt.grid(axis='both', linestyle=':', alpha=0.4)
 plt.ylim(0.6, 1.02)
 plt.xlim(0.25, 0.75)
 plt.title("Performance Metrics vs Promotion Threshold",
-          fontsize=15, pad=15, fontweight='bold')
+           pad=15, fontweight='bold')
 
 # 图例设置
 legend = plt.legend(loc='upper right',
                   frameon=True,
                   framealpha=0.95,
                   edgecolor='black',
-                  fontsize=12,
                   title='Metrics:',
-                  title_fontsize=13)
+                  )
 legend.get_frame().set_linewidth(1.5)  # 加粗图例边框
 
 # 保存与显示
 plt.tight_layout()
-plt.savefig('threshold_vs_f1',   # 保存为矢量图
+plt.savefig('fig\\threshold_vs_f1.pdf',   # 保存为矢量图
            bbox_inches='tight',
            dpi=300,
            facecolor='white')  # 确保白色背景    
