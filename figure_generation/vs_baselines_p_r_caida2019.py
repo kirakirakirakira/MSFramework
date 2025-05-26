@@ -1,6 +1,12 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+total_positives = 42
+total_samples = 167074
+total_negatives = total_samples - total_positives
+
 plt.rcParams.update({
     'font.size': 24,
     'axes.titlesize': 24,
@@ -119,6 +125,9 @@ group_keys = ['packet_size', 'entry_size', 'filter1_d', 'filter1_w', 'filter1_ct
               'filter2_alter_num', 'cm_depth', 'cm_width', 'cm_ct']
 df_user_filtered = df_user.loc[df_user.groupby(group_keys)['precision'].idxmax()]
 
+
+
+
 # 在合并数据集后增加排序逻辑
 df_combined = pd.concat([df_minhash, df_maxloghash, df_user_filtered])
 df_combined = df_combined.sort_values(by='space(KB)')  # 全局排序
@@ -126,12 +135,32 @@ df_combined = df_combined.sort_values(by='space(KB)')  # 全局排序
 
 # 计算吞吐量（packets/sec）
 df_combined['throughput'] = 10 / df_combined['insert-time']
-fig, axes = plt.subplots(1, 4, figsize=(24, 6), sharey=False)
+df_combined['TP'] = df_combined['recall'] * total_positives
+df_combined['FP'] = df_combined['TP'] / df_combined['precision'] - df_combined['TP']
+df_combined['FPR'] = df_combined['FP'] / total_negatives
+df_combined['FN'] = total_positives - df_combined['TP']
+df_combined['Accuracy'] = 1 - (df_combined['FP'] + df_combined['FN']) / total_samples
 
+df_combined['TN'] = total_negatives - df_combined['FP']
+
+# 避免除零错误
+denom = np.sqrt(
+    (df_combined['TP'] + df_combined['FP']) *
+    (df_combined['TP'] + df_combined['FN']) *
+    (df_combined['TN'] + df_combined['FP']) *
+    (df_combined['TN'] + df_combined['FN'])
+)
+df_combined['MCC'] = ((df_combined['TP'] * df_combined['TN']) - (df_combined['FP'] * df_combined['FN'])) / denom
+df_combined['MCC'] = df_combined['MCC'].fillna(0)
+
+
+# 设置子图 2 行 4 列
+fig, axes = plt.subplots(2, 4, figsize=(24, 10), sharey=False)
 metric_names = ['precision', 'recall', 'f1-score', 'throughput']
-titles = ['(a)Precision', '(b)Recall', '(c)F1-score', '(d)Throughput (Mpps)']
+titles = ['(a) Precision', '(b) Recall', '(c) F1-score', '(d) Throughput ']
 
-for idx, (ax, metric, title) in enumerate(zip(axes, metric_names, titles)):
+# 第一行：精度/召回率/F1/吞吐量
+for idx, (ax, metric, title) in enumerate(zip(axes[0], metric_names, titles)):
     for i, (method, group) in enumerate(df_combined.groupby('method')):
         group_sorted = group.sort_values('space(KB)')
         ax.plot(group_sorted['space(KB)'], group_sorted[metric],
@@ -142,20 +171,87 @@ for idx, (ax, metric, title) in enumerate(zip(axes, metric_names, titles)):
                 markersize=8,
                 color=colors[i])
     ax.set_xlabel('Space (KB)', fontweight='bold')
-    ax.set_ylabel(metric, fontweight='bold')
+    ax.set_ylabel(metric.capitalize(), fontweight='bold')
     ax.grid(True, linestyle='--', alpha=0.6)
-
-    # 把小标题放在图下方
     ax.annotate(title,
                 xy=(0.5, -0.35),
                 xycoords='axes fraction',
                 ha='center', va='center',
-             fontweight='bold')
+                fontweight='bold')
 
-# 添加共享图例在上方
-handles, labels = axes[0].get_legend_handles_labels()
-fig.legend(handles, labels, loc='upper center', ncol=3, frameon=True,edgecolor='black',prop={'weight': 'bold'})
+# 第二行第一个图：FPR
+ax_fpr = axes[1][0]
+for i, (method, group) in enumerate(df_combined.groupby('method')):
+    group_sorted = group.sort_values('space(KB)')
+    ax_fpr.plot(group_sorted['space(KB)'], group_sorted['FPR'],
+                label=method,
+                marker=markers[method],
+                linestyle=linestyles[method],
+                linewidth=2,
+                markersize=8,
+                color=colors[i])
+ax_fpr.set_xlabel('Space (KB)', fontweight='bold')
+ax_fpr.set_ylabel('FPR', fontweight='bold')
+ax_fpr.grid(True, linestyle='--', alpha=0.6)
+ax_fpr.annotate('(e) FPR', xy=(0.5, -0.35), xycoords='axes fraction',
+                ha='center', va='center', fontweight='bold')
 
-plt.tight_layout(rect=[0, 0, 1, 0.88])  # 给图例留出顶部空间
-plt.savefig('fig/vs_baseline_new.pdf', bbox_inches='tight', facecolor='white')
+ax_fnr = axes[1][1]
+for i, (method, group) in enumerate(df_combined.groupby('method')):
+    group_sorted = group.sort_values('space(KB)')
+    fnr_values = 1 - group_sorted['recall']
+    ax_fnr.plot(group_sorted['space(KB)'], fnr_values,
+                label=method,
+                marker=markers[method],
+                linestyle=linestyles[method],
+                linewidth=2,
+                markersize=8,
+                color=colors[i])
+ax_fnr.set_xlabel('Space (KB)', fontweight='bold')
+ax_fnr.set_ylabel('FNR', fontweight='bold')
+ax_fnr.grid(True, linestyle='--', alpha=0.6)
+ax_fnr.annotate('(f) FNR', xy=(0.5, -0.35), xycoords='axes fraction',
+                ha='center', va='center', fontweight='bold')
+
+
+ax_acc = axes[1][2]
+for i, (method, group) in enumerate(df_combined.groupby('method')):
+    group_sorted = group.sort_values('space(KB)')
+    ax_acc.plot(group_sorted['space(KB)'], group_sorted['Accuracy'],
+                label=method,
+                marker=markers[method],
+                linestyle=linestyles[method],
+                linewidth=2,
+                markersize=8,
+                color=colors[i])
+ax_acc.set_xlabel('Space (KB)', fontweight='bold')
+ax_acc.set_ylabel('Accuracy', fontweight='bold')
+ax_acc.grid(True, linestyle='--', alpha=0.6)
+ax_acc.annotate('(g) Accuracy', xy=(0.5, -0.35), xycoords='axes fraction',
+                ha='center', va='center', fontweight='bold')
+
+ax_mcc = axes[1][3]
+for i, (method, group) in enumerate(df_combined.groupby('method')):
+    group_sorted = group.sort_values('space(KB)')
+    ax_mcc.plot(group_sorted['space(KB)'], group_sorted['MCC'],
+                label=method,
+                marker=markers[method],
+                linestyle=linestyles[method],
+                linewidth=2,
+                markersize=8,
+                color=colors[i])
+ax_mcc.set_xlabel('Space (KB)', fontweight='bold')
+ax_mcc.set_ylabel('MCC', fontweight='bold')
+ax_mcc.grid(True, linestyle='--', alpha=0.6)
+ax_mcc.annotate('(h) MCC', xy=(0.5, -0.35), xycoords='axes fraction',
+                ha='center', va='center', fontweight='bold')
+
+
+
+# 添加图例
+handles, labels = axes[0][0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper center', ncol=3, frameon=True, edgecolor='black', prop={'weight': 'bold'})
+
+plt.tight_layout(rect=[0, 0, 1, 0.9])  # 留出上方空间给图例
+plt.savefig('fig/vs_baseline_new.pdf', bbox_inches='tight')
 plt.show()

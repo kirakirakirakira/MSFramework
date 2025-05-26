@@ -75,13 +75,14 @@ df = df.astype({
     'space(KB)': 'float',
     'threshold': 'float'
 })
-
+df['insert-time'] = df['insert-time'].astype(float)
+df['throughput'] = 10 / df['insert-time']
 # 过滤内存不超过150KB的数据
 df = df[df['space(KB)'] <= 150]
 
 # 所有的阈值
-colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
-          '#9467bd', '#8c564b', '#e377c2']  # 可自行扩展
+colors = ['#377eb8', '#e41a1c', '#4daf4a',
+              '#984ea3', '#ff7f00', '#ffff33', '#a65628']  # 可自行扩展
 markers = ['s', 'o', 'v', '^', 'D', '<', 'p']
 linestyles = ['-', '--', '-.', ':', '-', '--', '-.']
 
@@ -89,7 +90,7 @@ thresholds = sorted(df['threshold'].unique())
 
 # 多子图绘制函数（3图横排 + 子图标题 + 上方图例）
 def plot_metrics(metrics, ylabels, filename):
-    fig, axs = plt.subplots(1, 3, figsize=(18, 6), dpi=300, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=(24, 6), dpi=300, sharey=False)
 
     for idx, (metric, ylabel) in enumerate(zip(metrics, ylabels)):
         ax = axs[idx]
@@ -106,24 +107,22 @@ def plot_metrics(metrics, ylabels, filename):
         ax.set_xlabel(r"Memory (KB)", fontweight='bold')
         ax.set_ylabel(f"{ylabel}", fontweight='bold')
         ax.grid(True, linestyle=':', alpha=0.5)
+        ax.set_title(f"({chr(97+idx)}) {ylabel}", fontweight='bold', y=-0.35)
 
-        # 子图标题（放底部）
-        ax.set_title(f"({chr(97+idx)}) {ylabel}",
-                     fontweight='bold', y=-0.35)
-
-    # 图例放在顶部居中
+    # 图例放上方居中
     handles, labels = axs[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper center',
                ncol=len(thresholds), frameon=True,
-           edgecolor='black',
-               fontsize=16,prop={'weight': 'bold'})
+               edgecolor='black',
+               fontsize=16, prop={'weight': 'bold'})
 
-    plt.tight_layout(rect=[0, 0, 1, 0.93])  # 留出图例空间
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
     plt.savefig(f'fig/{filename}.pdf', bbox_inches='tight', facecolor='white')
     plt.show()
 
 
-# 调用函数：三个指标统一绘制
-plot_metrics(['precision', 'recall','f1-score'],
-             ['Precision', 'Recall','F1-Score'],
-             'metrics_vs_memory_diff_threshold')
+plot_metrics(
+    metrics=["f1-score", "precision", "recall", "throughput"],
+    ylabels=["F1-score", "Precision", "Recall", "Throughput (Mpps)"],
+    filename="metrics_vs_memory_diff_threshold"
+)

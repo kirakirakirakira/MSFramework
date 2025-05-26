@@ -21,8 +21,9 @@ def random_pick_ips(counter, n):
     return random.sample(ip_list, min(n, len(ip_list)))
 
 
-def data_analyze(data_num=None, file_path=None):
+def data_analyze(filename,data_num=None, file_path=None):
     """
+    :param filename:
     :param file_path: 文件地址
     :param data_num: 输入的数据包的数量
     :return: {flow_id:{e_id:count}}字典
@@ -45,7 +46,7 @@ def data_analyze(data_num=None, file_path=None):
         for line in lines[:data_num]:
             # 去掉行尾换行符，并按空格分割
             parts = line.strip().split()
-            if len(parts) == 2:  # 确保格式正确
+            if len(parts): #== 2:  # 确保格式正确
                 source_ip = parts[0]  # 第一个部分是源 IP 地址
                 destination_ip = parts[1]
                 if source_ip not in flow_dict:
@@ -59,7 +60,13 @@ def data_analyze(data_num=None, file_path=None):
 
     # 计算并打印执行时间
     execution_time = end_time1 - start_time
+    filename = f"{filename}.json"
+    filepath=os.path.join("processed_data",filename)
     print(f"构建<f,e>字典执行时间: {execution_time:.2f} 秒")
+    with open(filepath, "w") as f:
+        json.dump(flow_dict, f, indent=4)
+
+    print(f"筛选后的字典已保存到{file_path}.json")
     return flow_dict
 
 
@@ -69,9 +76,10 @@ def load_json(json_path):
     return original_data
 
 
-def get_abnormal_data(data, card, freq):
+def get_abnormal_data(data, card, freq,output):
     """
 
+    :param output: 输出文件名
     :param card: 基数范围
     :param freq: 频率范围
     :param data: 经过统计的源数据
@@ -82,13 +90,21 @@ def get_abnormal_data(data, card, freq):
         for flow_id, e_dict in data.items()
         if len(e_dict) > card or sum(e_dict.values()) > freq
     }
-    with open("processed_data/IMC_ab_flow.json", "w") as f:
+    filename = f"{output}.json"
+    filepath = os.path.join("processed_data", filename)
+    with open(filepath, "w") as f:
         json.dump(filtered_flows, f, indent=4)
 
-    print("筛选后的字典已保存到 filtered_flows.json")
+    print(f"筛选后的字典已保存到{output}.json")
 
 
 def extract_ips(input_pcap, output_txt):
+    """
+
+    :param input_pcap:
+    :param output_txt:
+    :return:
+    """
     with open(output_txt, 'w') as f:
         with PcapReader(input_pcap) as pcap_reader:
             for pkt in pcap_reader:
@@ -123,23 +139,10 @@ def merge_univ_parts(output_file='IMCdata\\merged_univ1.txt', encoding='utf-8'):
 
 if __name__ == "__main__":
 
-    #all_data_dict = data_analyze(data_num=None, file_path="IMCdata\\merged_univ1.txt")
+    #all_data_dict = data_analyze(data_num=10000000, file_path="datasets\stackoverflow\sx-stackoverflow-a2q.txt",filename="stackoverflow_dict")
     ab_data_dict=load_json("processed_data\\IMC_ab_flow.json")
     all_data_dict = load_json("processed_data\\IMC_dict.json")
-    print("length of ab_data_dict is %d" % len(ab_data_dict.keys()))
-    print("length of all_data_dict is %d" % len(all_data_dict.keys()))
-    # transformed_data = {
-    #     flow_id: {
-    #         "flow cardinality": len(e_counts),  # e_id 的唯一数量
-    #         "flow size": sum(e_counts.values())  # 计数总和
-    #     }
-    #     for flow_id, e_counts in all_data_dict.items()
-    # }
-    # 保存到 JSON 文件
-    # with open("processed_data/IMC_dict.json", "w", encoding="utf-8") as f:
-    #     json.dump(transformed_data, f, indent=4, ensure_ascii=False)
+    #get_abnormal_data(all_data_dict,5000,10000,"stackoverflow_ab_flow")
+    print(len(ab_data_dict))
 
-    # get_abnormal_data(all_data_dict,10000,20000)
-
-
-
+    print(len(all_data_dict))

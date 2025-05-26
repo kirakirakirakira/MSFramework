@@ -1,15 +1,29 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 plt.rcParams.update({
-    'font.size': 20,
-    'axes.titlesize': 20,
-    'axes.labelsize': 20,
-    'xtick.labelsize': 20,
-    'ytick.labelsize': 20,
-    'legend.fontsize': 20,
-    'font.family': 'serif',
-    'pdf.fonttype': 42
+    'font.size': 24,
+    'axes.titlesize': 24,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 24,
+    'ytick.labelsize': 24,
+    'legend.fontsize': 24,
+    'font.family': 'Times New Roman',
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42,
+    'text.usetex': False,
 })
+colors = sns.color_palette("tab10")
+markers = {
+    'ours': 'o',
+    'minhash': 's',
+    'maxloghash': '^'
+}
+linestyles = {
+    'ours': '-',
+    'minhash': '--',
+    'maxloghash': ':'
+}
 # 定义列名
 columns_minhash = [
     'packet_size', 'entry_size', 'filter1_d', 'filter1_w', 'filter1_ct', 'flow_id_size', 'simi_size', 'timestamp_size',
@@ -74,26 +88,25 @@ df_maxloghash['method'] = 'maxloghash'
 
 # 解析用户数据并过滤最佳F1-score
 user_data = """
-10000000,20,20,272,8,32,4,10,10,5,1,272,16,1.0,0.2619,0.4151,19.05,13,0.5,0.4
-10000000,20,40,272,8,32,4,10,20,10,1,272,16,0.9444,0.4048,0.5667,16.7,26,0.5,0.4
-10000000,20,60,272,8,32,4,10,30,15,1,272,16,0.9143,0.7619,0.8312,16.82,40,0.5,0.4
-10000000,20,80,272,8,32,4,10,40,20,1,272,16,0.9394,0.7381,0.8267,17.68,53,0.5,0.4
-10000000,20,100,272,8,32,4,10,50,25,1,272,16,0.9268,0.9048,0.9157,18.47,67,0.5,0.4
-10000000,20,120,272,8,32,4,10,60,30,1,272,16,0.8293,0.8095,0.8193,18.95,80,0.5,0.4
-10000000,20,140,272,8,32,4,10,70,35,1,272,16,0.814,0.8333,0.8235,19.18,94,0.5,0.4
-10000000,20,160,272,8,32,4,10,80,40,1,272,16,0.875,0.8333,0.8536,19.69,107,0.5,0.4
-10000000,20,180,272,8,32,4,10,90,45,1,272,16,0.8974,0.8333,0.8642,19.34,121,0.5,0.4
-10000000,20,200,272,8,32,4,10,100,50,1,272,16,0.8667,0.9286,0.8966,19.25,134,0.5,0.4
-10000000,20,120,272,8,32,4,10,60,30,1,272,16,0.9444,0.8095,0.8718,18.74,80,0.5,0.5
-10000000,20,140,272,8,32,4,10,70,35,1,272,16,0.9286,0.9286,0.9286,19.29,94,0.5,0.5
-10000000,20,160,272,8,32,4,10,80,40,1,272,16,0.973,0.8571,0.9114,20.07,107,0.5,0.5
-10000000,20,180,272,8,32,4,10,90,45,1,272,16,0.9444,0.8095,0.8718,22.82,121,0.5,0.5
+10000000,20,20,272,8,32,4,10,10,5,1,272,16,0.0,0.0,0,19.49,13,0.5,0.5
+10000000,20,40,272,8,32,4,10,20,10,1,272,16,0.0,0.0,0,19.36,26,0.5,0.5
+10000000,20,20,272,8,32,4,10,10,5,1,272,16,0.8571,0.2857,0.4285,19.3,13,0.5,0.5
+10000000,20,40,272,8,32,4,10,20,10,1,272,16,0.9375,0.7143,0.8108,19.65,26,0.5,0.5
+10000000,20,60,272,8,32,4,10,30,15,1,272,16,0.9474,0.8571,0.9,19.02,40,0.5,0.5
+10000000,20,80,272,8,32,4,10,40,20,1,272,16,0.9048,0.9048,0.9048,19.36,53,0.5,0.5
+10000000,20,100,272,8,32,4,10,50,25,1,272,16,0.9545,1.0,0.9767,18.94,67,0.5,0.5
+10000000,20,120,272,8,32,4,10,60,30,1,272,16,0.9524,0.9524,0.9524,19.08,80,0.5,0.5
+10000000,20,140,272,8,32,4,10,70,35,1,272,16,0.9545,1.0,0.9767,20.37,94,0.5,0.5
+10000000,20,160,272,8,32,4,10,80,40,1,272,16,0.9524,0.9524,0.9524,19.23,107,0.5,0.5
+10000000,20,180,272,8,32,4,10,90,45,1,272,16,0.9545,1.0,0.9767,19.58,121,0.5,0.5
+10000000,20,200,272,8,32,4,10,100,50,1,272,16,0.9545,1.0,0.9767,19.86,134,0.5,0.5
+10000000,20,220,272,8,32,4,10,110,55,1,272,16,0.9545,1.0,0.9767,19.58,147,0.5,0.5
 """
 df_user = pd.DataFrame([line.split(',') for line in user_data.strip().split('\n')], columns=columns_user)
 df_user['method'] = 'ours'
 
 # 转换数据类型
-numeric_cols = ['space(KB)', 'f1-score', 'insert-time']
+numeric_cols = ['space(KB)', 'precision', 'insert-time', 'recall','f1-score']
 for col in numeric_cols:
     df_minhash[col] = df_minhash[col].astype(float)
     df_maxloghash[col] = df_maxloghash[col].astype(float)
@@ -103,7 +116,7 @@ for col in numeric_cols:
 group_keys = ['packet_size', 'entry_size', 'filter1_d', 'filter1_w', 'filter1_ct',
               'flow_id_size', 'simi_size', 'timestamp_size', 'filter2_main_num',
               'filter2_alter_num', 'cm_depth', 'cm_width', 'cm_ct']
-df_user_filtered = df_user.loc[df_user.groupby(group_keys)['f1-score'].idxmax()]
+df_user_filtered = df_user.loc[df_user.groupby(group_keys)['precision'].idxmax()]
 
 # 在合并数据集后增加排序逻辑
 df_combined = pd.concat([df_minhash, df_maxloghash, df_user_filtered])
@@ -112,30 +125,35 @@ df_combined = df_combined.sort_values(by='space(KB)')  # 全局排序
 
 # 计算吞吐量（packets/sec）
 df_combined['throughput'] = 10 / df_combined['insert-time']
+fig, axes = plt.subplots(1, 4, figsize=(24, 5), sharey=False)
 
-# 绘制空间与F1-score关系图
-def plot_with_limit(ax, x_col, y_col, ylabel, xlim=(0,150)):
-    for method, group in df_combined.groupby('method'):
-        group_sorted = group.sort_values(x_col)
-        ax.plot(group_sorted[x_col], group_sorted[y_col],
-                marker='o', linestyle='-', label=method)
+metric_names = ['precision', 'recall', 'f1-score', 'throughput']
+titles = ['(a)Precision', '(b)Recall', '(c)F1-score', '(d)Throughput (Mpps)']
+
+for idx, (ax, metric, title) in enumerate(zip(axes, metric_names, titles)):
+    for i, (method, group) in enumerate(df_combined.groupby('method')):
+        group_sorted = group.sort_values('space(KB)')
+        ax.plot(group_sorted['space(KB)'], group_sorted[metric],
+                label=method,
+                marker=markers[method],
+                linestyle=linestyles[method],
+                linewidth=2,
+                markersize=8,
+                color=colors[i])
     ax.set_xlabel('Space (KB)', fontweight='bold')
-    ax.set_ylabel(ylabel, fontweight='bold')
-    ax.set_xlim(xlim)  # 控制显示范围
-    ax.legend()
-    ax.grid(True)
+    ax.set_ylabel(metric, fontweight='bold')
+    ax.grid(True, linestyle='--', alpha=0.6)
 
-# 创建带范围限制的图表
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    # 把小标题放在图下方
+    ax.annotate(title,
+                xy=(0.5, -0.35),
+                xycoords='axes fraction',
+                ha='center', va='center',
+             fontweight='bold')
 
-# F1-score图表
-plot_with_limit(ax1, 'space(KB)', 'f1-score', 'F1-score', xlim=(0, 150))
-ax1.set_title('Space vs F1-score (0-150KB)',fontweight='bold')
+# 添加共享图例在上方
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc='upper center', ncol=3, frameon=True,edgecolor='black',prop={'weight': 'bold'})
 
-# 吞吐量图表
-plot_with_limit(ax2, 'space(KB)', 'throughput', 'Throughput (Mpps)', xlim=(0, 150))
-ax2.set_title('Space vs Throughput (0-150KB)', fontweight='bold')
-plt.savefig('fig\\vs_baseline.pdf',
-           bbox_inches='tight',
-           facecolor='white')
-plt.show()
+plt.tight_layout(rect=[0, 0, 1, 0.88])  # 给图例留出顶部空间
+plt.savefig('fig/vs_baseline_StackOverflow.pdf', bbox_inches='tight', facecolor='white')

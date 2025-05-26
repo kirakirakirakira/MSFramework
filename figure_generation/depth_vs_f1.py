@@ -50,7 +50,8 @@ columns = [
 
 
 df = pd.DataFrame(data, columns=columns)
-df = df[['cm_depth', 'space(KB)', 'f1-score', 'precision', 'recall']].astype(float)
+df['throughput'] = 10 / df['insert-time']
+df = df[['cm_depth', 'space(KB)', 'f1-score', 'precision', 'recall', 'throughput']].astype(float)
 df.sort_values(['cm_depth', 'space(KB)'], inplace=True)
 
 # 样式设置
@@ -58,9 +59,9 @@ depth_colors = {1: '#1f77b4', 2: '#2ca02c', 3: '#d62728'}
 markers = {1: 'o', 2: 's', 3: '^'}
 linestyles = {1: '--', 2: '-.', 3: '-'}
 
-# 绘图函数（横排三个子图 + 上方图例）
+
 def plot_metrics_vs_depth(df, metrics, ylabels, filename):
-    fig, axs = plt.subplots(1, 3, figsize=(18, 6), dpi=300, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=(24, 6), dpi=300, sharey=False)
 
     for idx, (metric, ylabel) in enumerate(zip(metrics, ylabels)):
         ax = axs[idx]
@@ -83,12 +84,14 @@ def plot_metrics_vs_depth(df, metrics, ylabels, filename):
             ax.set_ylim(0.3, 1.0)
         elif metric == 'precision':
             ax.set_ylim(0.9, 1.0)
-        else:
+        elif metric == 'recall':
             ax.set_ylim(0, 1.0)
+        elif metric == 'throughput':
+            ax.set_ylim(df['throughput'].min() * 0.95, df['throughput'].max() * 1.05)
 
         ax.set_title(f"({chr(97+idx)}) {ylabel}", fontweight='bold', y=-0.35)
 
-    # 图例统一放在上方
+    # 图例放在顶部
     handles, labels = axs[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper center', ncol=len(depth_colors),
                frameon=True, edgecolor='black', fontsize=16, prop={'weight': 'bold'})
@@ -97,8 +100,9 @@ def plot_metrics_vs_depth(df, metrics, ylabels, filename):
     plt.savefig(f'fig/{filename}.pdf', bbox_inches='tight', facecolor='white')
     plt.show()
 
+
 # 调用函数
 plot_metrics_vs_depth(df,
-                      ['precision', 'recall','f1-score'],
-                      ['Precision', 'Recall','F1-score'],
-                      'metrics_vs_memory_diff_depth')
+    ['precision', 'recall', 'f1-score', 'throughput'],
+    ['Precision', 'Recall', 'F1-score', 'Throughput(Mpps)'],
+    'metrics_vs_memory_diff_depth')

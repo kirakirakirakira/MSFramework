@@ -19,7 +19,7 @@ def main_process(filter_1, filter2, filter1_scan_time=5000, filter2_scan_time=50
     start_read_time = time.time()
         # 一次性读取文件内容到内存
     with open(file_path, "r", encoding="utf-8") as file:
-        lines = file.readlines()
+        lines = file.readlines()[:10000000]
         #lines = file.readlines()[:10000000]# 将文件所有行读入列表
     print("file length:%d" % len(lines))
     end_read_time = time.time()
@@ -32,7 +32,7 @@ def main_process(filter_1, filter2, filter1_scan_time=5000, filter2_scan_time=50
     for line in lines:
         # 去掉行尾换行符，并按空格分割
         parts = line.strip().split()
-        if len(parts) == 2:
+        if len(parts): #== 2:
             if parts[0] in final_abnormal_flow_ids:
                 pass
             elif parts[0] in abnormal_flow_id_from_filter1:
@@ -114,7 +114,7 @@ def write_in_data(filter_1, filter_2):
             }
             df = pd.DataFrame([data])
             #
-            file_path='processed_data/maxlog_experiment_result_IMC.csv'
+            file_path='processed_data/maxlog_experiment_result_stackoverflow.csv'
             if os.path.exists(file_path):
                 # 后续追加模式（无表头）
                 df.to_csv(file_path, mode='a', header=False, index=False)
@@ -149,7 +149,7 @@ def write_in_data(filter_1, filter_2):
                 'filter2_threshold': filter_2.threshold
             }
             df = pd.DataFrame([data])
-            file_path='processed_data/minhash_experiment_result_IMC.csv'
+            file_path='processed_data/minhash_experiment_result_stackoverflow.csv'
             if os.path.exists(file_path):
                 # 后续追加模式（无表头）
                 df.to_csv(file_path, mode='a', header=False, index=False)
@@ -187,7 +187,7 @@ def write_in_data(filter_1, filter_2):
 
 
     df = pd.DataFrame([data])
-    file_path='processed_data/experiment_result_IMC.csv'
+    file_path='processed_data/experiment_result_stackoverflow.csv'
     if os.path.exists(file_path):
         # 后续追加模式（无表头）
         df.to_csv(file_path, mode='a', header=False, index=False)
@@ -196,12 +196,12 @@ def write_in_data(filter_1, filter_2):
         df.to_csv(file_path, mode='w', header=True, index=False)
 
 if __name__=="__main__":
-    for i in (4,8,20,25,33,50,100):
-        filter1 = ft1(100//i, i, 272)
-        bucketArray = BucketArray(50, 25, 272, 1,threshold=0.5)
+    for i in range(1,13):
+        filter1 = ft1(i, 20, 272)
+        bucketArray = BucketArray(10*i, 5*i, 272, 1,threshold=0.5)
         #bucketArray=Bucket_Array_minhash(i*10, i*5,200,threshold=0.9)
         #bucketArray=Bucket_Array_Maxlog(i*10,i*5,k=128,threshold=0.9)
-        final_abnormal_flow_id = main_process(filter1, bucketArray,2000,2000,file_path="IMCdata\\merged_univ1.txt")
+        final_abnormal_flow_id = main_process(filter1, bucketArray, 5000, 5000, file_path="datasets\\stackoverflow\\sx-stackoverflow-a2q.txt")
         print("filter1 插入用时：%.2f sec(%d min)" % (filter1.filter1_insert_time, filter1.filter1_insert_time // 60))
         print("filter1 扫描用时：%.2f sec(%d min)" % (filter1.filter1_scan_time, filter1.filter1_scan_time // 60))
         print("bucketArray插入用时：%.2f sec(%d min)" % (bucketArray.filter2_insert_time, bucketArray.filter2_insert_time // 60))
@@ -213,7 +213,67 @@ if __name__=="__main__":
         print("final_abnormal_flow_id:", end=" ")
         print(final_abnormal_flow_id)
 
-        with open("processed_data/IMC_ab_flow.json", "r") as f:
+        with open("processed_data/stackoverflow_ab_flow.json", "r") as f:
+            ground_truth = json.load(f).keys()
+
+        detected = final_abnormal_flow_id
+        print("true abnormal flow id " + str(ground_truth))
+        # 读取实验检测出的异常流 IP 集合
+
+        # 计算 Precision、Recall 和 F1
+        temp=precision_recall_f1_calculate(ground_truth, detected)
+        precision, recall, f1 = temp[0],temp[1],temp[2]
+        write_in_data(filter1,bucketArray)
+
+
+
+    for i in range(2,21,2):
+        filter1 = ft1(i, 20, 272)
+        #bucketArray = BucketArray(10*i, 5*i, 272, 1,threshold=0.5)
+        #bucketArray=Bucket_Array_minhash(i*10, i*5,200,threshold=0.9)
+        bucketArray=Bucket_Array_Maxlog(i*10,i*5,k=128,threshold=0.9)
+        final_abnormal_flow_id = main_process(filter1, bucketArray, 5000, 5000, file_path="datasets\\stackoverflow\\sx-stackoverflow-a2q.txt")
+        print("filter1 插入用时：%.2f sec(%d min)" % (filter1.filter1_insert_time, filter1.filter1_insert_time // 60))
+        print("filter1 扫描用时：%.2f sec(%d min)" % (filter1.filter1_scan_time, filter1.filter1_scan_time // 60))
+        print("bucketArray插入用时：%.2f sec(%d min)" % (bucketArray.filter2_insert_time, bucketArray.filter2_insert_time // 60))
+        print("bucketArray扫描用时：%.2f sec(%d min)" % (bucketArray.filter2_scan_time, bucketArray.filter2_scan_time // 60))
+        full_insert_time = filter1.filter1_insert_time + bucketArray.filter2_insert_time
+        print("总插入用时:%.2f sec(%d min) " % (full_insert_time, full_insert_time // 60))
+
+        abnormal_list = list(final_abnormal_flow_id)
+        print("final_abnormal_flow_id:", end=" ")
+        print(final_abnormal_flow_id)
+
+        with open("processed_data/stackoverflow_ab_flow.json", "r") as f:
+            ground_truth = json.load(f).keys()
+
+        detected = final_abnormal_flow_id
+        print("true abnormal flow id " + str(ground_truth))
+        # 读取实验检测出的异常流 IP 集合
+
+        # 计算 Precision、Recall 和 F1
+        temp=precision_recall_f1_calculate(ground_truth, detected)
+        precision, recall, f1 = temp[0],temp[1],temp[2]
+        write_in_data(filter1,bucketArray)
+
+    for i in range(1,13):
+        filter1 = ft1(i, 20, 272)
+        #bucketArray = BucketArray(10*i, 5*i, 272, 1,threshold=0.5)
+        bucketArray=Bucket_Array_minhash(i*10, i*5,200,threshold=0.9)
+        #bucketArray=Bucket_Array_Maxlog(i*10,i*5,k=128,threshold=0.9)
+        final_abnormal_flow_id = main_process(filter1, bucketArray,5000,5000,file_path="datasets\\stackoverflow\\sx-stackoverflow-a2q.txt")
+        print("filter1 插入用时：%.2f sec(%d min)" % (filter1.filter1_insert_time, filter1.filter1_insert_time // 60))
+        print("filter1 扫描用时：%.2f sec(%d min)" % (filter1.filter1_scan_time, filter1.filter1_scan_time // 60))
+        print("bucketArray插入用时：%.2f sec(%d min)" % (bucketArray.filter2_insert_time, bucketArray.filter2_insert_time // 60))
+        print("bucketArray扫描用时：%.2f sec(%d min)" % (bucketArray.filter2_scan_time, bucketArray.filter2_scan_time // 60))
+        full_insert_time = filter1.filter1_insert_time + bucketArray.filter2_insert_time
+        print("总插入用时:%.2f sec(%d min) " % (full_insert_time, full_insert_time // 60))
+
+        abnormal_list = list(final_abnormal_flow_id)
+        print("final_abnormal_flow_id:", end=" ")
+        print(final_abnormal_flow_id)
+
+        with open("processed_data/stackoverflow_ab_flow.json", "r") as f:
             ground_truth = json.load(f).keys()
 
         detected = final_abnormal_flow_id
