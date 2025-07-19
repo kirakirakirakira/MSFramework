@@ -155,7 +155,8 @@ df_combined['MCC'] = df_combined['MCC'].fillna(0)
 
 
 # 设置子图 2 行 4 列
-fig, axes = plt.subplots(2, 4, figsize=(24, 10), sharey=False)
+fig, axes = plt.subplots(2, 4, figsize=(24, 10), sharey=False,
+                         constrained_layout=True)
 metric_names = ['precision', 'recall', 'f1-score', 'throughput']
 titles = ['(a) Precision', '(b) Recall', '(c) F1-score', '(d) Throughput ']
 
@@ -250,8 +251,30 @@ ax_mcc.annotate('(h) MCC', xy=(0.5, -0.35), xycoords='axes fraction',
 
 # 添加图例
 handles, labels = axes[0][0].get_legend_handles_labels()
-fig.legend(handles, labels, loc='upper center', ncol=3, frameon=True, edgecolor='black', prop={'weight': 'bold'})
-
-plt.tight_layout(rect=[0, 0, 1, 0.9])  # 留出上方空间给图例
+fig.legend(handles, labels,
+           loc='upper center',
+           bbox_to_anchor=(0.5, 1.08),  # 上浮
+           ncol=3,
+           frameon=True, edgecolor='black', prop={'weight': 'bold'})
 plt.savefig('fig/vs_baseline_new.pdf', bbox_inches='tight')
-plt.show()
+#plt.show()
+metrics_to_output = {
+    '(a) Precision': 'precision',
+    '(b) Recall': 'recall',
+    '(c) F1-score': 'f1-score',
+    '(d) Throughput': 'throughput',
+    '(e) FPR': 'FPR',
+    '(f) FNR': lambda df: 1 - df['recall'],
+    '(g) Accuracy': 'Accuracy',
+    '(h) MCC': 'MCC'
+}
+
+print("\n=== 每张图的原始数据点坐标 ===")
+for title, metric in metrics_to_output.items():
+    print(f"\n{title}")
+    for method, group in df_combined.groupby('method'):
+        group_sorted = group.sort_values('space(KB)')
+        x = group_sorted['space(KB)'].values
+        y = group_sorted[metric].values if not callable(metric) else metric(group_sorted).values
+        coords = [f"({xi:.2f}, {yi:.4f})" for xi, yi in zip(x, y)]
+        print(f"方法：{method}  " + "  ".join(coords))

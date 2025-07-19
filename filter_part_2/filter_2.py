@@ -169,17 +169,6 @@ class BucketArray:
 
             endtime = time.time()
             self.filter2_scan_time += (endtime - starttime)
-        #print("scan_offset:%d"%self.scan_offset)
-            # **更新 scan_offset，保证轮转遍历**
-        # if self.scan_offsetA + self.scan_stepA>=total_size_A:
-        #     self.scan_offsetA=0
-        # else:
-        #     self.scan_offsetA = (self.scan_offsetA + self.scan_stepA) % total_size_A
-        #
-        # if self.scan_offsetB + self.scan_stepB>=total_size_B:
-        #     self.scan_offsetB=0
-        # else:
-        #     self.scan_offsetB = (self.scan_offsetB + self.scan_stepB) % total_size_B
 
         self.scan_times = (self.scan_times + 1) % alltimes
         return final_list
