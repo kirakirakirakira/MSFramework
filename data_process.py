@@ -137,12 +137,31 @@ def merge_univ_parts(output_file='IMCdata\\merged_univ1.txt', encoding='utf-8'):
                 print(f"处理文件 {filename} 时发生错误：{str(e)}")
                 raise
 
+
+def filter_json_by_ips(input_path, output_path, target_ips):
+    """
+    从一个 JSON 文件中过滤出键在 target_ips 中的项，并将结果写入新文件。
+
+    参数:
+        input_path (str): 原始 JSON 文件路径
+        output_path (str): 输出 JSON 文件路径
+        target_ips (list): 需要保留的 IP 列表（作为源 IP）
+    """
+    with open(input_path, 'r') as f:
+        data = json.load(f)
+
+    filtered_data = {k: v for k, v in data.items() if k in target_ips}
+
+    with open(output_path, 'w') as f:
+        json.dump(filtered_data, f, indent=4)
+
 if __name__ == "__main__":
-
-    #all_data_dict = data_analyze(data_num=10000000, file_path="datasets\stackoverflow\sx-stackoverflow-a2q.txt",filename="stackoverflow_dict")
-    ab_data_dict=load_json("processed_data\\IMC_ab_flow.json")
-    all_data_dict = load_json("processed_data\\IMC_dict.json")
-    #get_abnormal_data(all_data_dict,5000,10000,"stackoverflow_ab_flow")
-    print(len(ab_data_dict))
-
+    #extract_ips("D:\\dataset\\Friday-WorkingHours.pcap","datasets\\cicids17\\cicids17.txt")
+   #all_data_dict = data_analyze(file_path="datasets\\cicids17\\cicids17.txt",filename="cicids2017_dict")
+    # ab_data_dict=load_json("processed_data\\IMC_ab_flow.json")
+    all_data_dict = load_json("processed_data\\cicids2017_dict.json")
     print(len(all_data_dict))
+    #filter_json_by_ips("processed_data\\cicids2017_dict.json","processed_data\\cicids2017_ab_flow.json",['192.168.10.12' ,'192.168.10.9' ,'205.174.165.73', '192.168.10.15','192.168.10.14' ,'192.168.10.5','192.168.10.8' ,'192.168.10.17','172.16.0.1','192.168.10.50'])
+    #get_abnormal_data(all_data_dict,5000,10000,"stackoverflow_ab_flow")
+    # print(len(ab_data_dict))
+    # print(len(all_data_dict))

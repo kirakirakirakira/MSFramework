@@ -59,7 +59,7 @@ class BucketArray:
         self.alpha = alpha  #to be defined
         self.scan_times = 1
         self.staticdata= StaticData(k_minhash=k,seed=seed,p=self.p)
-        self.staticdata.update_data_for_minhash()
+        # self.staticdata.update_data_for_minhash()
         self.abnormal_data_for_minhash=self.staticdata.data_for_minhash
         self.threshold = threshold
         #记录总扫描时间

@@ -12,8 +12,8 @@ def write_in_data(filter_1, filter_2,precision,recall,f1,full_insert_time,file_p
             'filter1_w': filter_1.cols,
             'filter1_ct': 8,
             'flow_id_size': 32,
-            'simi_size': 4,
-            'timestamp_size': 10,
+            'simi_size': 32,
+            'timestamp_size': 32,
             'filter2_main_num': len(filter_2.buckets_array[0]),
             'filter2_alter_num': len(filter_2.buckets_array[1]),
             'cm_depth': filter_2.row,
@@ -23,10 +23,10 @@ def write_in_data(filter_1, filter_2,precision,recall,f1,full_insert_time,file_p
             'recall': round(recall, 4),
             'f1-score': round(f1, 4),
             'insert-time': round(full_insert_time, 2),
-            'space(KB)': int((filter_1.rows * filter_1.cols * 8 + filter_1.rows * 32 + filter_1.rows *4
+            'space(KB)': int((filter_1.rows * filter_1.cols * 8 + filter_1.rows * 32 + filter_1.rows *32
                               + (len(filter_2.buckets_array[0]) + len(filter_2.buckets_array[1])) * (
                                       (filter_2.row * filter_2.col * 16) +
-                                      (32+ 4+ 10 ))) / 8 // 1024),
+                                      (32+ 32+ 32 ))) / 8 // 1024),
             'filter1_threshold': filter_1.threshold,
             'filter2_threshold': filter_2.threshold
         }
@@ -40,8 +40,8 @@ def write_in_data(filter_1, filter_2,precision,recall,f1,full_insert_time,file_p
                 'filter1_w': filter_1.cols,
                 'filter1_ct': 8,
                 'flow_id_size': 32,
-                'simi_size': 4,
-                'timestamp_size': 10,
+                'simi_size': 32,
+                'timestamp_size': 32,
                 'filter2_main_num': len(filter_2.buckets_array[0]),
                 'filter2_alter_num': len(filter_2.buckets_array[1]),
                 'k':filter_2.k,
@@ -49,10 +49,10 @@ def write_in_data(filter_1, filter_2,precision,recall,f1,full_insert_time,file_p
                 'recall': round(recall, 4),
                 'f1-score': round(f1, 4),
                 'insert-time': round(full_insert_time, 2),
-                'space(KB)': int((filter_1_rows * filter_1.cols * 8 + filter_1_rows * 32 + filter_1_rows * 4
+                'space(KB)': int((filter_1_rows * filter_1.cols * 8 + filter_1_rows * 32 + filter_1_rows * 32
                                   + (len(filter_2.buckets_array[0]) + len(filter_2.buckets_array[1])) * (
                                           (filter_2.k* (6+1)) +
-                                          (32 + 4 + 10))) / 8 // 1024),
+                                          (32 + 32 + 32))) / 8 // 1024),
                 'filter1_threshold': filter_1.threshold,
                 'filter2_threshold': filter_2.threshold
             }
@@ -76,8 +76,8 @@ def write_in_data(filter_1, filter_2,precision,recall,f1,full_insert_time,file_p
                 'filter1_w': filter_1.cols,
                 'filter1_ct': 8,
                 'flow_id_size': 32,
-                'simi_size': 4,
-                'timestamp_size': 10,
+                'simi_size': 32,
+                'timestamp_size': 32,
                 'filter2_main_num': len(filter_2.buckets_array[0]),
                 'filter2_alter_num': len(filter_2.buckets_array[1]),
                 'k_minhash': filter_2.k_minhash,
@@ -85,10 +85,10 @@ def write_in_data(filter_1, filter_2,precision,recall,f1,full_insert_time,file_p
                 'recall': round(recall, 4),
                 'f1-score': round(f1, 4),
                 'insert-time': round(full_insert_time, 2),
-                'space(KB)': int((filter_1_rows * filter_1.cols * 8 + filter_1_rows * 32 + filter_1_rows * 4
+                'space(KB)': int((filter_1_rows * filter_1.cols * 8 + filter_1_rows * 32 + filter_1_rows * 32
                                   + (len(filter_2.buckets_array[0]) + len(filter_2.buckets_array[1])) * (
                                           (filter_2.k_minhash * 16) +
-                                          (32 + 4 + 10))) / 8 // 1024),
+                                          (32 + 32 + 32))) / 8 // 1024),
                 'filter1_threshold': filter_1.threshold,
                 'filter2_threshold': filter_2.threshold
             }

@@ -21,7 +21,7 @@ class Filter1:
         self.scan_times = 1
         self.threshold = 0.5  # 可调整的阈值
         self.staticdata = StaticData(col=self.cols)
-        self.staticdata.update_data_for_filter1()
+        # self.staticdata.update_data_for_filter1()
         self.abnormal_data_for_filter1 = self.staticdata.data_for_filter1
         self.abnormal_flow_ids = self.staticdata.fplist
         self.filter1_insert_time = 0

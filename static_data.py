@@ -13,7 +13,7 @@ from BasicFunctions.MinHash import MinHash16, generate_hash_params
 # marked flow
 
 # load abnormal data
-with open("processed_data/caida2016_ab_flow.json", "r", encoding="utf-8") as file:
+with open("processed_data/cicids2017_ab_flow.json", "r", encoding="utf-8") as file:
     loaded_data = json.load(file)
 
 
