@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 # 设置学术图表样式
 plt.rcParams.update({
     'font.size': 18,
-    'axes.titlesize': 22,
-    'axes.labelsize': 18,
-    'xtick.labelsize': 16,
-    'ytick.labelsize': 16,
-    'legend.fontsize': 20,
+    'axes.titlesize': 28,
+    'axes.labelsize': 28,
+    'xtick.labelsize': 28,
+    'ytick.labelsize': 28,
+    'legend.fontsize': 28,
     'font.family': 'Times New Roman',
     'pdf.fonttype': 42,
     'ps.fonttype': 42,
@@ -61,13 +61,13 @@ linestyles = {1: '--', 2: '-.', 3: '-'}
 
 
 def plot_metrics_vs_depth(df, metrics, ylabels, filename):
-    fig, axs = plt.subplots(1, 4, figsize=(24, 6), dpi=300, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=(24, 4.8), dpi=300, sharey=False)
 
     for idx, (metric, ylabel) in enumerate(zip(metrics, ylabels)):
         ax = axs[idx]
         for depth, group in df.groupby('cm_depth'):
             ax.plot(group['space(KB)'], group[metric],
-                    label=f'Depth={int(depth)}',
+                    label=rf"$d={int(depth)}$",
                     color=depth_colors[depth],
                     marker=markers[depth],
                     linestyle=linestyles[depth],
@@ -93,16 +93,20 @@ def plot_metrics_vs_depth(df, metrics, ylabels, filename):
 
     # 图例放在顶部
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper center', ncol=len(depth_colors),
-               frameon=True, edgecolor='black', fontsize=16, prop={'weight': 'bold'})
+    fig.legend(handles, labels,
+               loc='upper center',
+               ncol=len(depth_colors),
+               frameon=True,
+               edgecolor='black',
+               prop={'weight': 'bold'},
+               bbox_to_anchor=(0.5, 1.1))
 
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.subplots_adjust(top=0.88, bottom=0.1, left=0.06, right=0.98, wspace=0.27)
     plt.savefig(f'fig/{filename}.pdf', bbox_inches='tight', facecolor='white')
     plt.show()
-
 
 # 调用函数
 plot_metrics_vs_depth(df,
     ['precision', 'recall', 'f1-score', 'throughput'],
-    ['Precision', 'Recall', 'F1-score', 'Throughput(Mpps)'],
+    ['Precision', 'Recall', 'F1-score', 'Throughput'],
     'metrics_vs_memory_diff_depth')

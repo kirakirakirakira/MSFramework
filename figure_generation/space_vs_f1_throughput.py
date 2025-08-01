@@ -5,11 +5,11 @@ import os
 # 设置学术图表样式
 plt.rcParams.update({
     'font.size': 18,
-    'axes.titlesize': 30,
-    'axes.labelsize': 30,
-    'xtick.labelsize': 30,
-    'ytick.labelsize': 30,
-    'legend.fontsize': 30,
+    'axes.titlesize': 24,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 24,
+    'ytick.labelsize': 24,
+    'legend.fontsize': 24,
     'font.family': 'Times New Roman',
     'pdf.fonttype': 42,
     'ps.fonttype': 42,
@@ -43,13 +43,10 @@ df['throughput'] = 10 / df['insert-time']
 df_sorted = df.sort_values('space(KB)')
 
 # 创建画布
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6.5), dpi=300)
-plt.subplots_adjust(wspace=0.3)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), dpi=300)
+
 
 # ===== 左图：P/R/F1 =====
-ax1.plot(df_sorted['space(KB)'], df_sorted['f1-score'],
-         marker='o', color='#2ca02c', linewidth=2,
-         markersize=8, markeredgewidth=1.5, label='F1-Score',linestyle='-.')
 
 ax1.plot(df_sorted['space(KB)'], df_sorted['precision'],
          marker='^', color='#1f77b4', linewidth=2,
@@ -58,10 +55,15 @@ ax1.plot(df_sorted['space(KB)'], df_sorted['precision'],
 ax1.plot(df_sorted['space(KB)'], df_sorted['recall'],
          marker='s', color='#ff7f0e', linewidth=2,
          markersize=7, markeredgewidth=1.5, label='Recall')
+ax1.plot(df_sorted['space(KB)'], df_sorted['f1-score'],
+         marker='o', color='#2ca02c', linewidth=2,
+         markersize=8, markeredgewidth=1.5, label='F1-score',linestyle='-.')
 
-ax1.set_xlabel('Memory Usage (KB)', fontweight='bold')
+
+
+ax1.set_xlabel('Memory (KB)', fontweight='bold')
 ax1.set_ylabel('Score', fontweight='bold')
-ax1.set_title('(a) P, R, F1 vs Memory', fontweight='bold', y=-0.3)
+#ax1.set_title('(a) Precision, Recall, F1-score vs. Memory', fontweight='bold', y=-0.4)
 ax1.grid(True, linestyle=':', alpha=0.6)
 
 # 仅左图显示 legend
@@ -72,7 +74,7 @@ ax1.legend(loc='lower right', frameon=True, edgecolor='black', framealpha=0.95,p
 #          marker='s', color='#d62728', linewidth=2,
 #          markersize=8, markeredgewidth=1.5,linestyle="--")
 #
-# ax2.set_xlabel('Memory Usage (KB)', fontweight='bold')
+# ax2.set_xlabel('Memory (KB)', fontweight='bold')
 # ax2.set_ylabel('Throughput (Mpps)', fontweight='bold')
 # ax2.set_title('(b) Throughput vs Memory', fontweight='bold', y=-0.3)
 # ax2.grid(True, linestyle=':', alpha=0.6)
@@ -86,11 +88,14 @@ ax2.bar(df_sorted['space(KB)'], df_sorted['throughput'],
         edgecolor=bar_edge_color,
         linewidth=1.2)
 
-ax2.set_xlabel('Memory Usage (KB)', fontweight='bold')
+ax2.set_xlabel('Memory (KB)', fontweight='bold')
 ax2.set_ylabel('Throughput (Mpps)', fontweight='bold')
-ax2.set_title('(b) Throughput vs Memory', fontweight='bold', y=-0.3)
+#ax2.set_title('(b) Throughput vs. Memory', fontweight='bold', y=-0.4)
 ax2.grid(True, linestyle=':', alpha=0.6, axis='y')  # 只画横向网格线
-
+ax1.text(0.5, -0.3, '(a) Precision, Recall, F1-score vs. Memory',
+         fontsize=24, fontweight='bold', ha='center', va='top', transform=ax1.transAxes)
+ax2.text(0.5, -0.3, '(b) Throughput vs. Memory',
+         fontsize=24, fontweight='bold', ha='center', va='top', transform=ax2.transAxes)
 
 # ===== 坐标范围设置 =====
 for ax in [ax1, ax2]:
@@ -102,6 +107,6 @@ ax1.set_ylim(0.1, 1.0)
 ax2.set_ylim(0.4, 0.55)
 
 # 保存图像
-plt.tight_layout()
+fig.subplots_adjust(bottom=0.25, wspace=0.4)
 plt.savefig('fig/memory_vs_f1_throughput.pdf', bbox_inches='tight', facecolor='white')
 plt.show()

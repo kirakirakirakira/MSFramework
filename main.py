@@ -61,15 +61,15 @@ def main_process(filter_1, filter2, filter1_scan_time=5000, filter2_scan_time=50
 
 
 if __name__=="__main__":
-    staticdata = StaticData(col=272,CM_col=272,CM_row=1,k_minhash=200)
+    staticdata = StaticData(col=272,CM_col=272,CM_row=1,k_minhash=200,k=128)
     staticdata.update_data_for_filter1()
     staticdata.update_data_for_minhash()
-    for k in range(2):
-        for i in range(1,14,2):
+    for k in range(1):
+        for i in range(2,13,2):
             filter1 = ft1(i, 20, 272)
             filter1.staticdata=staticdata
             filter1.abnormal_data_for_filter1=staticdata.data_for_filter1
-            #bucketArray = BucketArray(10,5, 272, 1,threshold=0.7)
+            #bucketArray = BucketArray(i*10,i*5, 272, 1,threshold=0.7)
             bucketArray=Bucket_Array_minhash(i*10, i*5,200,threshold=0.9)
             #bucketArray=Bucket_Array_Maxlog(i*10,i*5,k=128,threshold=0.9)
             bucketArray.staticdata=staticdata

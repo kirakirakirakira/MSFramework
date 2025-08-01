@@ -6,11 +6,11 @@ import os
 # 图像参数
 plt.rcParams.update({
     'font.size': 18,
-    'axes.titlesize': 22,
-    'axes.labelsize': 18,
-    'xtick.labelsize': 16,
-    'ytick.labelsize': 16,
-    'legend.fontsize': 20,
+    'axes.titlesize': 24,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 24,
+    'ytick.labelsize': 24,
+    'legend.fontsize': 24,
     'font.family': 'Times New Roman',
     'pdf.fonttype': 42,  # 适用于 LaTeX 编译
     'ps.fonttype': 42,
@@ -90,7 +90,7 @@ thresholds = sorted(df['threshold'].unique())
 
 # 多子图绘制函数（3图横排 + 子图标题 + 上方图例）
 def plot_metrics(metrics, ylabels, filename):
-    fig, axs = plt.subplots(1, 4, figsize=(24, 6), dpi=300, sharey=False)
+    fig, axs = plt.subplots(1, 4, figsize=(24, 5), dpi=300, sharey=False)
 
     for idx, (metric, ylabel) in enumerate(zip(metrics, ylabels)):
         ax = axs[idx]
@@ -107,22 +107,25 @@ def plot_metrics(metrics, ylabels, filename):
         ax.set_xlabel(r"Memory (KB)", fontweight='bold')
         ax.set_ylabel(f"{ylabel}", fontweight='bold')
         ax.grid(True, linestyle=':', alpha=0.5)
-        ax.set_title(f"({chr(97+idx)}) {ylabel}", fontweight='bold', y=-0.35)
+        ax.set_title(f"({chr(97+idx)}) {ylabel}", fontweight='bold', y=-0.3)
 
     # 图例放上方居中
     handles, labels = axs[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper center',
-               ncol=len(thresholds), frameon=True,
+    fig.legend(handles, labels,
+               loc='upper center',
+               ncol=len(thresholds),
+               frameon=True,
                edgecolor='black',
-               fontsize=16, prop={'weight': 'bold'})
+               prop={'weight': 'bold'},
+               bbox_to_anchor=(0.5, 1.05))  # 注意这个设置 legend 更高位置
 
-    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    fig.subplots_adjust(top=0.88, bottom=0.1, left=0.06, right=0.98, wspace=0.2)
     plt.savefig(f'fig/{filename}.pdf', bbox_inches='tight', facecolor='white')
     plt.show()
 
 
 plot_metrics(
-    metrics=["f1-score", "precision", "recall", "throughput"],
-    ylabels=["F1-score", "Precision", "Recall", "Throughput (Mpps)"],
+    metrics=["precision", "recall", "f1-score", "throughput"],
+    ylabels=["Precision", "Recall", "F1-score", "Throughput"],
     filename="metrics_vs_memory_diff_threshold"
 )

@@ -5,11 +5,11 @@ import os
 # 设置风格（统一学术论文风格）
 plt.rcParams.update({
     'font.size': 18,
-    'axes.titlesize': 30,
-    'axes.labelsize': 30,
-    'xtick.labelsize': 30,
-    'ytick.labelsize': 30,
-    'legend.fontsize': 26,
+    'axes.titlesize': 24,
+    'axes.labelsize': 24,
+    'xtick.labelsize': 24,
+    'ytick.labelsize': 24,
+    'legend.fontsize': 24,
     'font.family': 'Times New Roman',
     'pdf.fonttype': 42,
     'ps.fonttype': 42,
@@ -62,14 +62,14 @@ markers = {
 }
 
 # 创建子图
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), dpi=300)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), dpi=300)
 
 # --- 左图：Precision / Recall / F1 ---
 for metric in ['precision', 'recall', 'f1-score']:
     ax1.plot(grouped['entry_size'], grouped[metric],
              marker=markers[metric],
              color=colors[metric],
-             label=metric.replace('-', ' ').title(),
+             label=metric.capitalize(),
              **line_config)
 
 ax1.set_xlabel('Number of cells', fontweight='bold')
@@ -78,7 +78,9 @@ ax1.set_xlim(0, 110)
 ax1.set_xticks(range(0, 111, 20))
 ax1.set_ylim(0.3, 1.0)
 ax1.grid(True, linestyle=':', alpha=0.6)
-ax1.set_title('(a) P, R, F1 vs number of cells', fontweight='bold', y=-0.35)
+#x1.set_title('(a) Precision, Recall, F1-score vs. number of cells', fontweight='bold', y=-0.35)
+#ax1.set_title('(a) Precision, Recall, \nF1-score vs. Number of Cells', fontweight='bold', y=-0.65)
+
 
 # 图例只显示在左图，放在图内左上角
 ax1.legend(loc='lower right',
@@ -107,10 +109,16 @@ ax2.bar(entry_labels, grouped['throughput'],
 ax2.set_xlabel('Number of cells', fontweight='bold')
 ax2.set_ylabel('Throughput (Mpps)', fontweight='bold')
 ax2.grid(True, linestyle=':', alpha=0.6, axis='y')  # 只加横线网格
-ax2.set_title('(b) Throughput vs number of cells', fontweight='bold', y=-0.35)
-
-
+#ax2.set_title('(b) Throughput vs. number of cells', fontweight='bold', y=-0.35)
+# ax1.set_title('(a) Precision, Recall,\nF1-score vs. Number of Cells', fontweight='bold', y=1.05)
+# ax2.set_title('(b) Throughput vs. Number of Cells', fontweight='bold', y=1.05)
+ax1.text(0.5, -0.3, '(a) Precision, Recall, F1-score vs. Number of Cells',
+         fontsize=24, fontweight='bold', ha='center', va='top', transform=ax1.transAxes)
+ax2.text(0.5, -0.3, '(b) Throughput vs. Number of Cells',
+         fontsize=24, fontweight='bold', ha='center', va='top', transform=ax2.transAxes)
+# fig.subplots_adjust(top=0.85, wspace=0.4)
+fig.subplots_adjust(bottom=0.25, wspace=0.4)
 # 紧凑排版
-plt.tight_layout()
+# plt.tight_layout()
 plt.savefig('fig/entry_size_performance.pdf', bbox_inches='tight', facecolor='white')
 plt.show()
